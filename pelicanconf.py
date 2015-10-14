@@ -3,10 +3,25 @@
 from __future__ import unicode_literals
 
 AUTHOR = u'Chris Foster'
-SITENAME = u'Naming is hard'
-SITEURL = ''
+SITENAME = u'Chris Foster'
+SITEURL = 'https://c42f.github.io'
+
+SITESUBTITLE = u"Yup, that's a blog alright"
+MENUITEMS = [('blog','/')]
+
+PROFILE_IMAGE_URL = "/images/chris.jpg"
+
+# Mathjax plugin from
+# https://github.com/amic-github/python-markdown-mathjax
+MD_EXTENSIONS = ['codehilite(css_class=highlight)','extra','mathjax']
 
 PATH = 'content'
+STATIC_PATHS = ['images']
+
+ARTICLE_URL = '{date:%Y}/{date:%m}/{date:%d}/{slug}.html'
+ARTICLE_SAVE_AS = '{date:%Y}/{date:%m}/{date:%d}/{slug}.html'
+
+THEME = './crowsfoot_theme'
 
 TIMEZONE = 'Australia/Brisbane'
 
@@ -19,17 +34,13 @@ TRANSLATION_FEED_ATOM = None
 AUTHOR_FEED_ATOM = None
 AUTHOR_FEED_RSS = None
 
-# Blogroll
-LINKS = (('Pelican', 'http://getpelican.com/'),
-         ('Python.org', 'http://python.org/'),
-         ('Jinja2', 'http://jinja.pocoo.org/'),
-         ('You can modify those links in your config file', '#'),)
-
-# Social widget
-SOCIAL = (('You can add links in your config file', '#'),
-          ('Another social link', '#'),)
+EMAIL_ADDRESS = 'chris42f@gmail.com'
+GITHUB_ADDRESS = 'http://github.com/c42f'
 
 DEFAULT_PAGINATION = False
 
-# Uncomment following line if you want document-relative URLs when developing
-#RELATIVE_URLS = True
+SHOW_ARTICLE_AUTHOR = False
+
+LICENSE_NAME = "CC BY-SA"
+LICENSE_URL = "https://creativecommons.org/licenses/by-sa/4.0/"
+

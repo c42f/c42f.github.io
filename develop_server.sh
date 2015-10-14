@@ -11,6 +11,8 @@ INPUTDIR=$BASEDIR/content
 OUTPUTDIR=$BASEDIR/output
 CONFFILE=$BASEDIR/pelicanconf.py
 
+export PYTHONPATH=$(dirname $(readlink -f $0)):$PYTHONPATH
+
 ###
 # Don't change stuff below here unless you are sure
 ###
