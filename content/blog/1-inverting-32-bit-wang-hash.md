@@ -198,7 +198,7 @@ uint32_t unhash(uint32_t hashval)
 }
 ```
 
-Here's a [complete test program]({attach}wang_hash_inverse.cpp) which exhaustively
+Here's a [complete test program]({attach}wang-hash-inverse.cpp) which exhaustively
 checks that `unhash(hash(i)) == i` for all $2^{32}$ possible values.
 
 

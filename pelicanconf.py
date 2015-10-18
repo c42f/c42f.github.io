@@ -16,7 +16,8 @@ PROFILE_IMAGE_URL = "/images/chris.jpg"
 MD_EXTENSIONS = ['codehilite(css_class=highlight)','extra','mathjax']
 
 PATH = 'content'
-STATIC_PATHS = ['images']
+STATIC_PATHS = ['images', 'blog']
+ARTICLE_PATHS = ['blog']
 
 ARTICLE_URL = '{date:%Y}/{date:%m}/{date:%d}/{slug}.html'
 ARTICLE_SAVE_AS = '{date:%Y}/{date:%m}/{date:%d}/{slug}.html'
