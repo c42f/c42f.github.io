@@ -21,7 +21,7 @@ STATIC_PATHS = ['images']
 ARTICLE_URL = '{date:%Y}/{date:%m}/{date:%d}/{slug}.html'
 ARTICLE_SAVE_AS = '{date:%Y}/{date:%m}/{date:%d}/{slug}.html'
 
-THEME = './crowsfoot_theme'
+THEME = './theme_crowsfoot'
 
 TIMEZONE = 'Australia/Brisbane'
 

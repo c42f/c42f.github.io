@@ -1,0 +1,3 @@
+[submodule "theme_crowsfoot"]
+	path = theme_crowsfoot
+	url = git@github.com:c42f/crowsfoot.git
