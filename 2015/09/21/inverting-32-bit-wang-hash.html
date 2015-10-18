@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+      <title>Chris Foster</title>
+      <link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,600italic,700italic,400,600,700' rel='stylesheet' type='text/css' />
+      <link href='http://fonts.googleapis.com/css?family=Merriweather:300' rel='stylesheet' type='text/css'/>
+      <link href='http://fonts.googleapis.com/css?family=Source+Code+Pro:200,400,700' rel='stylesheet' type='text/css'/>
+      <link rel="stylesheet" type="text/css" href="/theme/css/icons.css"/>
+      <link rel="stylesheet" type="text/css" href="/theme/css/styles.css"/>
+      <meta charset="utf-8" />
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']], processEscapes: true}
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+
+  </head>
+
+  <body id="index">
+    <!-- header -->
+    <header class="siteheader">
+      <!-- site image -->
+        <div class= "siteimage">
+          <a class="nodec" href=/images/chris.jpg>
+            <img width="200" height="200" src=/images/chris.jpg>
+          </a>
+        </div>
+
+      <div class = "sitebanner">
+        <h1><a class="sitetitle nodec" href="https://c42f.github.io">Chris Foster</a></h1>
+        <h3 class ="sitesubtitle">Yup, that's a blog alright</h3>
+        <!-- nav -->
+        <nav class="menu">
+          <ul>
+            <!-- menu items-->
+              <li><a class="nodec" href="/">blog</a></li>
+            <!--pages-->
+                <li><a class="nodec" href="pages/about.html">about</a></li>
+            <!-- services icons -->
+              <li><a class="nodec icon-mail-alt" href="mailto:chris42f@gmail.com"></a></li>
+              <li><a class="nodec icon-github" href="http://github.com/c42f"></a></li>
+          </ul>
+        </nav>
+      </div> <!-- sitebanner -->
+    </header>
+
+    <!-- content -->
+
+<section class="content">
+
+  <h3 class="posttitle">
+    <a class="nodec" href="/2015/09/21/inverting-32-bit-wang-hash.html" rel="bookmark" title="Permalink to Inverting Thomas Wang's 32 bit integer hash">
+      Inverting Thomas Wang's 32 bit integer hash
+    </a>
+  </h3>
+
+  <div class="postinfo">
+    <p class="published" title="2015-09-21T00:00:00+10:00">
+      Mon 21 September 2015
+    </p>
+
+  </div><!-- .postinfo -->
+
+  <div class="article">
+    <p>A collegue at work recently asked for the inverse of the
+<a href="http://web.archive.org/web/20060507103516/http://www.cris.com/~Ttwang/tech/inthash.htm">2002 version</a><sup id="fnref:versionnote"><a class="footnote-ref" href="#fn:versionnote" rel="footnote">1</a></sup>
+of Thomas Wang's 32 bit mix function.  Here is a C++ implementation:</p>
+<div class="highlight"><pre><span class="kt">uint32_t</span> <span class="nf">inthash</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="n">key</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">key</span> <span class="o">+=</span> <span class="o">~</span><span class="p">(</span><span class="n">key</span> <span class="o">&lt;&lt;</span> <span class="mi">15</span><span class="p">);</span>
+    <span class="n">key</span> <span class="o">^=</span> <span class="p">(</span><span class="n">key</span> <span class="o">&gt;&gt;</span> <span class="mi">10</span><span class="p">);</span>
+    <span class="n">key</span> <span class="o">+=</span> <span class="p">(</span><span class="n">key</span> <span class="o">&lt;&lt;</span> <span class="mi">3</span><span class="p">);</span>
+    <span class="n">key</span> <span class="o">^=</span> <span class="p">(</span><span class="n">key</span> <span class="o">&gt;&gt;</span> <span class="mi">6</span><span class="p">);</span>
+    <span class="n">key</span> <span class="o">+=</span> <span class="o">~</span><span class="p">(</span><span class="n">key</span> <span class="o">&lt;&lt;</span> <span class="mi">11</span><span class="p">);</span>
+    <span class="n">key</span> <span class="o">^=</span> <span class="p">(</span><span class="n">key</span> <span class="o">&gt;&gt;</span> <span class="mi">16</span><span class="p">);</span>
+    <span class="k">return</span> <span class="n">key</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>This is an invertible hash which also does a good job of mixing the bits -
+changing a bit in the input leads to changing many bits in the output.
+It shows up in various places on the web, for example in the
+<a href="https://chromium.googlesource.com/chromium/blink/+/master/Source/wtf/HashFunctions.h">chromium source</a>.</p>
+<p>Geoffrey Irving has worked out the
+<a href="https://naml.us/blog/2012/03/inverse-of-a-hash-function">inverse for the 64 bit version</a>,
+but a quick search didn't show up a solution for the 32 bit version.  This
+seemed like a <a href="https://xkcd.com/356">cute problem</a>, so rather than look around
+on the web I spent a few fun hours fiddling and came up with something.</p>
+<hr />
+<p>To make the data flow clearer, I think it helps to change notation to name all
+the states in the computation and avoid mutating <code>key</code>:</p>
+<div class="highlight"><pre><span class="kt">uint32_t</span> <span class="nf">hash</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="n">key</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kt">uint32_t</span> <span class="n">k0</span> <span class="o">=</span> <span class="n">key</span><span class="p">;</span>
+    <span class="kt">uint32_t</span> <span class="n">k1</span> <span class="o">=</span> <span class="n">k0</span> <span class="o">+</span> <span class="o">~</span><span class="p">(</span><span class="n">k0</span> <span class="o">&lt;&lt;</span> <span class="mi">15</span><span class="p">);</span>
+    <span class="kt">uint32_t</span> <span class="n">k2</span> <span class="o">=</span> <span class="n">k1</span> <span class="o">^</span>  <span class="p">(</span><span class="n">k1</span> <span class="o">&gt;&gt;</span> <span class="mi">10</span><span class="p">);</span>
+    <span class="kt">uint32_t</span> <span class="n">k3</span> <span class="o">=</span> <span class="n">k2</span> <span class="o">+</span>  <span class="p">(</span><span class="n">k2</span> <span class="o">&lt;&lt;</span>  <span class="mi">3</span><span class="p">);</span>
+    <span class="kt">uint32_t</span> <span class="n">k4</span> <span class="o">=</span> <span class="n">k3</span> <span class="o">^</span>  <span class="p">(</span><span class="n">k3</span> <span class="o">&gt;&gt;</span>  <span class="mi">6</span><span class="p">);</span>
+    <span class="kt">uint32_t</span> <span class="n">k5</span> <span class="o">=</span> <span class="n">k4</span> <span class="o">+</span> <span class="o">~</span><span class="p">(</span><span class="n">k4</span> <span class="o">&lt;&lt;</span> <span class="mi">11</span><span class="p">);</span>
+    <span class="kt">uint32_t</span> <span class="n">k6</span> <span class="o">=</span> <span class="n">k5</span> <span class="o">^</span>  <span class="p">(</span><span class="n">k5</span> <span class="o">&gt;&gt;</span> <span class="mi">16</span><span class="p">);</span>
+    <span class="k">return</span> <span class="n">k6</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>There's basically two types of steps here:</p>
+<ol>
+<li>Steps involving arithmetic operations and left shifts, possibly with a
+     bitwise negation.</li>
+<li>Steps involving bitwise xor and right shifts</li>
+</ol>
+<p>All steps of the first type can be rewritten as combinations of multiplication
+and a bitwise negation.  For example (in mod 32 arithmetic):</p>
+<div class="highlight"><pre><span class="n">k1</span> <span class="o">=</span> <span class="n">k0</span> <span class="o">+</span> <span class="o">~</span><span class="p">(</span><span class="n">k0</span> <span class="o">&lt;&lt;</span> <span class="mi">15</span><span class="p">)</span>
+   <span class="o">=</span> <span class="n">k0</span> <span class="o">-</span> <span class="p">(</span><span class="n">k0</span><span class="o">&lt;&lt;</span><span class="mi">15</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>    <span class="c1">// since  ~u + u + 1 = 0  for any u</span>
+   <span class="o">=</span> <span class="n">k0</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span><span class="o">&lt;&lt;</span><span class="mi">15</span><span class="p">)</span><span class="o">*</span><span class="n">k0</span> <span class="o">-</span> <span class="mi">1</span>
+   <span class="o">=</span> <span class="o">-</span><span class="p">((</span><span class="mi">1</span><span class="o">&lt;&lt;</span><span class="mi">15</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">k0</span> <span class="o">-</span> <span class="mi">1</span>
+   <span class="o">=</span> <span class="o">~</span><span class="p">(((</span><span class="mi">1</span><span class="o">&lt;&lt;</span><span class="mi">15</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">k0</span><span class="p">)</span>
+</pre></div>
+
+
+<p>Now, $2^{15} - 1$ is relatively prime to $2^{32}$, so there exists a $\mod 2^{32}$
+<a href="https://en.wikipedia.org/wiki/Modular_multiplicative_inverse">modular multiplicative inverse</a>.
+Obviously bitwise negation <code>~</code> is also invertible, so these types of steps are
+invertible.  The <a href="http://julialang.org">julia</a> language provides a handy
+implementation of the multiplicative inverse:</p>
+<div class="highlight"><pre><span class="n">julia</span><span class="o">&gt;</span> <span class="n">invmod</span><span class="p">(</span><span class="mi">2</span><span class="o">^</span><span class="mi">15</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="o">^</span><span class="mi">32</span><span class="p">)</span>
+<span class="mi">3221192703</span>
+</pre></div>
+
+
+<p>so we have <code>k0 = 3221192703*~k1</code>.  Inverses of the other steps of this type
+can be readily calculated in a similar way.</p>
+<p>Steps of the second type are Feistel functions, as <a href="https://naml.us/blog/2012/03/inverse-of-a-hash-function">noted in the blog post about
+the 64 bit version</a>, so
+they're also invertible.</p>
+<p>The simplest example is <code>k6</code>: decompose <code>k5</code> and <code>k6</code> into low and high 16 bit
+parts:</p>
+<div class="highlight"><pre><span class="n">k5</span> <span class="o">=</span> <span class="p">(</span><span class="n">k5High</span><span class="o">&lt;&lt;</span><span class="mi">16</span><span class="p">)</span> <span class="o">+</span> <span class="n">k5Low</span>
+<span class="n">k6</span> <span class="o">=</span> <span class="p">(</span><span class="n">k6High</span><span class="o">&lt;&lt;</span><span class="mi">16</span><span class="p">)</span> <span class="o">+</span> <span class="n">k6Low</span>
+</pre></div>
+
+
+<p>then <code>k6 = k5^(k5&gt;&gt;16)</code> is just</p>
+<div class="highlight"><pre><span class="n">k6High</span> <span class="o">=</span> <span class="n">k5High</span>
+<span class="n">k6Low</span> <span class="o">=</span> <span class="n">k5Low</span> <span class="o">^</span> <span class="n">k6High</span>   <span class="c1">// ^ is xor here!</span>
+</pre></div>
+
+
+<p>thus</p>
+<div class="highlight"><pre><span class="n">k5High</span> <span class="o">=</span> <span class="n">k6High</span>
+<span class="n">k5Low</span> <span class="o">=</span> <span class="n">k6Low</span> <span class="o">^</span> <span class="n">k6High</span>   <span class="c1">// a = b^c  &lt;=&gt;  a^c = b</span>
+</pre></div>
+
+
+<p>so <code>k5-&gt;k6</code> is its own self-inverse which is neat.  The others of this
+type could be done iteratively using something like the above.  The
+smaller the shift amount, the more iterations required to compute
+the full inverse.</p>
+<p>A neat alternative way to look at these operations is as matrix multiplication
+where the <code>uint32</code> values are thought of vectors of 32 bits.  As bits, the
+matrices and vectors are constructed from elements of the
+<a href="https://en.wikipedia.org/wiki/GF%282%29">field GF(2)</a> where mutliplication is
+logical <code>and</code>, and addition is logical <code>xor</code>.  This helps if you want to see how
+to construct a non-iterative inverse.</p>
+<p>Here's a julia session using the
+<a href="https://github.com/andrewcooke/IntModN.jl">IntModN</a> package which makes it easy to work
+with GF(2), in particular inverting the matrix just uses the standard machinery
+(matlab, eat ya heart out!)</p>
+<div class="highlight"><pre><span class="n">julia</span><span class="o">&gt;</span> <span class="k">using</span> <span class="n">IntModN</span>
+<span class="n">julia</span><span class="o">&gt;</span> <span class="kd">const</span> <span class="n">wordsize</span> <span class="o">=</span> <span class="mi">16</span>
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">make_matrix</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">=</span> <span class="n">map</span><span class="p">(</span><span class="n">GF2</span><span class="p">,</span> <span class="n">eye</span><span class="p">(</span><span class="kt">Int</span><span class="p">,</span> <span class="n">wordsize</span><span class="p">)</span> <span class="o">+</span>
+                        <span class="n">diagm</span><span class="p">(</span><span class="n">ones</span><span class="p">(</span><span class="kt">Int</span><span class="p">,</span> <span class="n">wordsize</span><span class="o">-</span><span class="n">abs</span><span class="p">(</span><span class="n">n</span><span class="p">)),</span> <span class="o">-</span><span class="n">n</span><span class="p">))</span>
+
+<span class="c"># Matrix representing k4 = k3 ^ (k3 &gt;&gt; 6)</span>
+<span class="c"># In 16 bit arithmetic to keep matrix size managable:</span>
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">make_matrix</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+<span class="mi">16</span><span class="n">x16</span> <span class="n">Array</span><span class="p">{</span><span class="n">IntModN</span><span class="o">.</span><span class="n">ZField</span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="kt">Int64</span><span class="p">},</span><span class="mi">2</span><span class="p">}:</span>
+ <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
+ <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
+ <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
+ <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
+ <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
+ <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
+ <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
+ <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
+ <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
+ <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
+ <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
+ <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
+ <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
+ <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>
+ <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>
+ <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>
+
+<span class="c"># Now the inverse</span>
+<span class="n">julia</span><span class="o">&gt;</span> <span class="n">inv</span><span class="p">(</span><span class="n">make_matrix</span><span class="p">(</span><span class="mi">6</span><span class="p">))</span>
+<span class="mi">16</span><span class="n">x16</span> <span class="n">Array</span><span class="p">{</span><span class="n">IntModN</span><span class="o">.</span><span class="n">ZField</span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="kt">Int64</span><span class="p">},</span><span class="mi">2</span><span class="p">}:</span>
+ <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
+ <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
+ <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
+ <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
+ <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
+ <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
+ <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
+ <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
+ <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
+ <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
+ <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
+ <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
+ <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
+ <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>
+ <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>
+ <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>
+</pre></div>
+
+
+<p>Each band of the inverse can be implemented with a bitshift.  In 16 bit
+arithmetic, this is <code>k3 = k4 ^ (k4&lt;&lt;6) ^ (k4&lt;&lt;12)</code>.  For the 32 bit case, we
+have:</p>
+<div class="highlight"><pre><span class="kt">uint32_t</span> <span class="n">k3</span> <span class="o">=</span> <span class="n">k4</span> <span class="o">^</span> <span class="p">(</span><span class="n">k4</span> <span class="o">&gt;&gt;</span> <span class="mi">6</span><span class="p">)</span> <span class="o">^</span> <span class="p">(</span><span class="n">k4</span> <span class="o">&gt;&gt;</span> <span class="mi">12</span><span class="p">)</span> <span class="o">^</span> <span class="p">(</span><span class="n">k4</span> <span class="o">&gt;&gt;</span> <span class="mi">18</span><span class="p">)</span> <span class="o">^</span> <span class="p">(</span><span class="n">k4</span> <span class="o">&gt;&gt;</span> <span class="mi">24</span><span class="p">)</span> <span class="o">^</span> <span class="p">(</span><span class="n">k4</span> <span class="o">&gt;&gt;</span> <span class="mi">30</span><span class="p">);</span>
+</pre></div>
+
+
+<p>Blah blah theory theory whatever just show the solution.  Ok, here's C++ code for the inverse:</p>
+<div class="highlight"><pre><span class="kt">uint32_t</span> <span class="nf">unhash</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="n">hashval</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kt">uint32_t</span> <span class="n">k6</span> <span class="o">=</span> <span class="n">hashval</span><span class="p">;</span>
+    <span class="kt">uint32_t</span> <span class="n">k5</span> <span class="o">=</span> <span class="n">k6</span> <span class="o">^</span> <span class="p">(</span><span class="n">k6</span> <span class="o">&gt;&gt;</span> <span class="mi">16</span><span class="p">);</span>
+    <span class="kt">uint32_t</span> <span class="n">k4</span> <span class="o">=</span> <span class="mi">4290770943</span> <span class="o">*</span> <span class="o">~</span><span class="n">k5</span><span class="p">;</span>
+    <span class="kt">uint32_t</span> <span class="n">k3</span> <span class="o">=</span> <span class="n">k4</span> <span class="o">^</span> <span class="p">(</span><span class="n">k4</span> <span class="o">&gt;&gt;</span> <span class="mi">6</span><span class="p">)</span> <span class="o">^</span> <span class="p">(</span><span class="n">k4</span> <span class="o">&gt;&gt;</span> <span class="mi">12</span><span class="p">)</span> <span class="o">^</span> <span class="p">(</span><span class="n">k4</span> <span class="o">&gt;&gt;</span> <span class="mi">18</span><span class="p">)</span> <span class="o">^</span> <span class="p">(</span><span class="n">k4</span> <span class="o">&gt;&gt;</span> <span class="mi">24</span><span class="p">)</span> <span class="o">^</span> <span class="p">(</span><span class="n">k4</span> <span class="o">&gt;&gt;</span> <span class="mi">30</span><span class="p">);</span>
+    <span class="kt">uint32_t</span> <span class="n">k2</span> <span class="o">=</span> <span class="mi">954437177</span> <span class="o">*</span> <span class="n">k3</span><span class="p">;</span>
+    <span class="kt">uint32_t</span> <span class="n">k1</span> <span class="o">=</span> <span class="n">k2</span> <span class="o">^</span> <span class="p">(</span><span class="n">k2</span> <span class="o">&gt;&gt;</span> <span class="mi">10</span><span class="p">)</span> <span class="o">^</span> <span class="p">(</span><span class="n">k2</span> <span class="o">&gt;&gt;</span> <span class="mi">20</span><span class="p">)</span> <span class="o">^</span> <span class="p">(</span><span class="n">k2</span> <span class="o">&gt;&gt;</span> <span class="mi">30</span><span class="p">);</span>
+    <span class="kt">uint32_t</span> <span class="n">k0</span> <span class="o">=</span> <span class="mi">3221192703</span> <span class="o">*</span> <span class="o">~</span><span class="n">k1</span><span class="p">;</span>
+    <span class="k">return</span> <span class="n">k0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>Here's a <a href="https://c42f.github.io/2015/09/21/wang-hash-inverse.cpp">complete test program</a> which exhaustively
+checks that <code>unhash(hash(i)) == i</code> for all $2^{32}$ possible values.</p>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:versionnote">
+<p>There's more than one version of this hash, but I didn't realise
+it to start with.  According to the Internet Archive, the version used here is
+from 2002, but there's also more recent (presumably improved)
+<a href="http://web.archive.org/web/20090408063205/http://www.cris.com/~ttwang/tech/inthash.htm">2006 version</a>.&#160;<a class="footnote-backref" href="#fnref:versionnote" rev="footnote" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div>
+  </div><!-- .content -->
+
+</section>
+
+
+    <!-- footer -->
+    <footer>
+      <p>
+        © Chris Foster, license <a href="https://creativecommons.org/licenses/by-sa/4.0/"> CC BY-SA</a>
+        unless otherwise noted.
+        Generated by <a href= "http://docs.getpelican.com/">Pelican</a> with
+        <a href="http://github.com/porterjamesj/crowsfoot">crowsfoot</a> theme.
+      </p>
+    </footer>
+  </body>
+</html>
