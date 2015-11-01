@@ -13,7 +13,7 @@ PROFILE_IMAGE_URL = "/images/chris.jpg"
 
 # Mathjax plugin from
 # https://github.com/amic-github/python-markdown-mathjax
-MD_EXTENSIONS = ['codehilite(css_class=highlight)','extra','mathjax']
+MD_EXTENSIONS = ['codehilite(css_class=highlight)','extra','mathjax','strikethrough']
 
 PATH = 'content'
 STATIC_PATHS = ['images', 'blog']
