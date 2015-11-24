@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+      <title>Chris Foster</title>
+      <link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,600italic,700italic,400,600,700' rel='stylesheet' type='text/css' />
+      <link href='http://fonts.googleapis.com/css?family=Merriweather:300' rel='stylesheet' type='text/css'/>
+      <link href='http://fonts.googleapis.com/css?family=Source+Code+Pro:200,400,700' rel='stylesheet' type='text/css'/>
+      <link rel="stylesheet" type="text/css" href="/theme/css/icons.css"/>
+      <link rel="stylesheet" type="text/css" href="/theme/css/styles.css"/>
+      <meta charset="utf-8" />
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']], processEscapes: true}
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+
+  </head>
+
+  <body id="index">
+    <!-- header -->
+    <header class="siteheader">
+      <!-- site image -->
+        <div class= "siteimage">
+          <a class="nodec" href=/images/chris.jpg>
+            <img width="200" height="200" src=/images/chris.jpg>
+          </a>
+        </div>
+
+      <div class = "sitebanner">
+        <h1><a class="sitetitle nodec" href="">Chris Foster</a></h1>
+        <h3 class ="sitesubtitle">Yup, that's a blog alright</h3>
+        <!-- nav -->
+        <nav class="menu">
+          <ul>
+            <!-- menu items-->
+              <li><a class="nodec" href="/">blog</a></li>
+            <!--pages-->
+                <li><a class="nodec" href="/pages/about.html">about</a></li>
+            <!-- services icons -->
+              <li><a class="nodec icon-mail-alt" href="mailto:chris42f@gmail.com"></a></li>
+              <li><a class="nodec icon-github" href="http://github.com/c42f"></a></li>
+          </ul>
+        </nav>
+      </div> <!-- sitebanner -->
+    </header>
+
+    <!-- content -->
+
+<section class="content">
+
+  <h3 class="posttitle">
+    <a class="nodec" href="/drafts/c++-stream-metadata.html" rel="bookmark" title="Permalink to Attaching metadata to C++ streams">
+      Attaching metadata to C++ streams
+    </a>
+  </h3>
+
+  <div class="postinfo">
+    <p class="published" title="2015-10-15T00:00:00+10:00">
+      Thu 15 October 2015
+    </p>
+
+  </div><!-- .postinfo -->
+
+  <div class="article">
+    <p>In C++, displaying <code>iostream</code> information when things go wrong can be a
+pain.</p>
+<div class="highlight"><pre><span class="kt">void</span> <span class="nf">write_on_stream</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="o">&amp;</span> <span class="n">out</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">out</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Write a thing&quot;</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">out</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">throw</span> <span class="n">std</span><span class="o">::</span><span class="n">runtime_error</span><span class="p">(</span>
+            <span class="s">&quot;Couldn&#39;t write to the stream.  &quot;</span>
+            <span class="s">&quot;No, I won&#39;t tell you which stream it was.  &quot;</span>
+            <span class="s">&quot;Don&#39;t give me that look, I don&#39;t know either.&quot;</span>
+        <span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>It would be nice to be able to name the stream for logging when something goes
+wrong.  At a first sight<sup id="fnref:secondsight"><a class="footnote-ref" href="#fn:secondsight" rel="footnote">1</a></sup> the only way to do this seems to be to
+put the stream in a wrapper object.  This works, but it feels a bit intrusive
+and unnatural to me.  It also doesn't play well with third party libraries which
+pass around standard library iostreams.</p>
+<p>I just hit this problem again and realized the obscure <code>xalloc()</code>/<code>pword()</code>
+custom formatting interface can be abused to solve it.  It's admittedly a bit of
+a hack, but it works.  Let's say we want to attach the following metadata
+struct:</p>
+<div class="highlight"><pre><span class="k">struct</span> <span class="n">StreamInfo</span>
+<span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">name</span><span class="p">;</span> <span class="c1">//&lt; Name for the stream</span>
+    <span class="kt">int64_t</span> <span class="n">size</span><span class="p">;</span>     <span class="c1">//&lt; Number of characters in stream, -1 if unknown</span>
+
+    <span class="n">StreamInfo</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span> <span class="n">name</span> <span class="o">=</span> <span class="s">&quot;unknown_stream&quot;</span><span class="p">,</span>
+               <span class="kt">int64_t</span> <span class="n">size</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="o">:</span> <span class="n">name</span><span class="p">(</span><span class="n">name</span><span class="p">),</span>
+        <span class="n">size</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+    <span class="p">{</span> <span class="p">}</span>
+<span class="p">};</span>
+</pre></div>
+
+
+<p>Inside each standard C++ stream there's a container for storing custom
+formatting flags.  The <code>xalloc()</code> function allocates a new globally unique index
+in this container.  You're meant to use it to control the formatting of custom
+types<sup id="fnref:xallocpurpose"><a class="footnote-ref" href="#fn:xallocpurpose" rel="footnote">2</a></sup> but we're going to stash a <code>StreamInfo</code> in there.</p>
+<div class="highlight"><pre><span class="k">const</span> <span class="kt">int</span> <span class="n">g_streamInfoIndex</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">ios</span><span class="o">::</span><span class="n">xalloc</span><span class="p">();</span>
+</pre></div>
+
+
+<p>Calling <code>stream.pword(g_streamInfoIndex)</code> now gives a reference to a <code>void*</code> on
+the instance <code>stream</code>, and we can store anything we like there.  The
+lifetime of heap objects assigned to a <code>pword</code> pointer need to be managed
+carefully using the <code>register_callback</code> function.</p>
+<div class="highlight"><pre><span class="c1">/// Deallocate any attached StreamInfo on `erase_event`</span>
+<span class="k">static</span> <span class="k">void</span> <span class="n">deleteStreamInfo</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">ios_base</span><span class="o">::</span><span class="k">event</span> <span class="k">event</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">ios_base</span><span class="o">&amp;</span> <span class="n">stream</span><span class="p">,</span> <span class="k">int</span> <span class="cm">/*index*/</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="k">event</span> <span class="o">!=</span> <span class="n">std</span><span class="o">::</span><span class="n">ios_base</span><span class="o">::</span><span class="n">erase_event</span><span class="p">)</span>
+        <span class="k">return</span><span class="p">;</span>
+    <span class="c1">// erase_event =&gt; copyfmt() or ~ios_base() was called.  We&#39;d like not to</span>
+    <span class="c1">// delete the StreamInfo on a call to copyfmt(), but it&#39;s not really</span>
+    <span class="c1">// possible to retain due to iostreams API assumptions.</span>
+    <span class="k">void</span><span class="o">*&amp;</span> <span class="k">ref</span> <span class="o">=</span> <span class="n">stream</span><span class="p">.</span><span class="n">pword</span><span class="p">(</span><span class="n">g_streamInfoIndex</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="k">ref</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">delete</span> <span class="n">static_cast</span><span class="o">&lt;</span><span class="n">StreamInfo</span><span class="o">*&gt;</span><span class="p">(</span><span class="k">ref</span><span class="p">);</span>
+        <span class="k">ref</span> <span class="o">=</span> <span class="mh">0</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+
+<span class="n">StreamInfo</span><span class="o">&amp;</span> <span class="n">getStreamInfo</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">ios_base</span><span class="o">&amp;</span> <span class="n">stream</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">void</span><span class="o">*&amp;</span> <span class="k">ref</span> <span class="o">=</span> <span class="n">stream</span><span class="p">.</span><span class="n">pword</span><span class="p">(</span><span class="n">g_streamInfoIndex</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="k">ref</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">ref</span> <span class="o">=</span> <span class="n">static_cast</span><span class="o">&lt;</span><span class="k">void</span><span class="o">*&gt;</span><span class="p">(</span><span class="k">new</span> <span class="n">StreamInfo</span><span class="p">);</span>
+        <span class="n">stream</span><span class="p">.</span><span class="n">register_callback</span><span class="p">(</span><span class="n">deleteStreamInfo</span><span class="p">,</span> <span class="mh">0</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="o">*</span><span class="n">static_cast</span><span class="o">&lt;</span><span class="n">StreamInfo</span><span class="o">*&gt;</span><span class="p">(</span><span class="k">ref</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span class="kt">void</span> <span class="nf">setStreamInfo</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">ios_base</span><span class="o">&amp;</span> <span class="n">stream</span><span class="p">,</span>
+                   <span class="k">const</span> <span class="n">StreamInfo</span><span class="o">&amp;</span> <span class="n">info</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">getStreamInfo</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span> <span class="o">=</span> <span class="n">info</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">setStreamInfo</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">ios_base</span><span class="o">&amp;</span> <span class="n">stream</span><span class="p">,</span>
+                   <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span> <span class="n">name</span> <span class="o">=</span> <span class="s">&quot;unknown_stream&quot;</span><span class="p">,</span>
+                   <span class="kt">int64_t</span> <span class="n">size</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">setStreamInfo</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">StreamInfo</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">size</span><span class="p">));</span>
+<span class="p">}</span>
+
+
+<span class="c1">/// Set istringstream information, with sensible defaults</span>
+<span class="c1">///</span>
+<span class="c1">/// The size of the stream internal string buffer is assumed to be already filled by the time that setStreamInfo</span>
+<span class="c1">///</span>
+<span class="c1">/// calls to stream.str(newstring)</span>
+<span class="kt">void</span> <span class="nf">setStreamInfo</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">istringstream</span><span class="o">&amp;</span> <span class="n">stream</span><span class="p">,</span>
+                   <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span> <span class="n">name</span> <span class="o">=</span> <span class="s">&quot;unknown_istringstream&quot;</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">setStreamInfo</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">StreamInfo</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">true</span><span class="p">,</span> <span class="n">stream</span><span class="p">.</span><span class="n">rdbuf</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">in_avail</span><span class="p">()));</span>
+<span class="p">}</span>
+
+<span class="c1">/// Set fstream information</span>
+<span class="kt">void</span> <span class="nf">setStreamInfo</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">ifstream</span><span class="o">&amp;</span> <span class="n">stream</span><span class="p">,</span>
+                   <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span> <span class="n">name</span> <span class="o">=</span> <span class="s">&quot;unknown_ifstream&quot;</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">boost</span><span class="o">::</span><span class="n">system</span><span class="o">::</span><span class="n">error_code</span> <span class="n">err</span><span class="p">;</span>
+    <span class="kt">uint64_t</span> <span class="n">fileSize</span> <span class="o">=</span> <span class="n">boost</span><span class="o">::</span><span class="n">filesystem</span><span class="o">::</span><span class="n">file_size</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">err</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">err</span><span class="p">)</span> <span class="n">fileSize</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+    <span class="n">setStreamInfo</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">StreamInfo</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">true</span><span class="p">,</span> <span class="n">fileSize</span><span class="p">));</span>
+<span class="p">}</span>
+
+
+<span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="o">&amp;</span> <span class="n">operator</span><span class="o">&lt;&lt;</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="o">&amp;</span> <span class="n">out</span><span class="p">,</span> <span class="k">const</span> <span class="n">StreamInfo</span><span class="o">&amp;</span> <span class="n">info</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">out</span><span class="p">.</span><span class="n">setf</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">ios</span><span class="o">::</span><span class="n">boolalpha</span><span class="p">);</span>
+    <span class="n">out</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;(name=</span><span class="se">\&quot;</span><span class="s">&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">info</span><span class="p">.</span><span class="n">name</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;</span><span class="se">\&quot;</span><span class="s">, &quot;</span>
+        <span class="o">&lt;&lt;</span> <span class="s">&quot;size=&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">info</span><span class="p">.</span><span class="n">size</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;)&quot;</span><span class="p">;</span>
+    <span class="k">return</span> <span class="n">out</span><span class="p">;</span>
+<span class="p">}</span>
+
+
+<span class="kt">int</span> <span class="n">main</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">istringstream</span> <span class="n">iss</span><span class="p">(</span><span class="s">&quot;asdf&quot;</span><span class="p">);</span>
+    <span class="n">setStreamInfo</span><span class="p">(</span><span class="n">iss</span><span class="p">,</span> <span class="s">&quot;A string stream&quot;</span><span class="p">);</span>
+
+    <span class="p">{</span>
+        <span class="c1">// Copyfmt must be </span>
+        <span class="n">std</span><span class="o">::</span><span class="n">istringstream</span> <span class="n">dummy</span><span class="p">;</span>
+        <span class="n">copyfmt</span><span class="p">(</span><span class="n">iss</span><span class="p">,</span> <span class="n">dummy</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">getStreamInfo</span><span class="p">(</span><span class="n">iss</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+
+    <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">fileName</span> <span class="o">=</span> <span class="s">&quot;/home/chris/dev/test/stream_info.cpp&quot;</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">ifstream</span> <span class="n">file</span><span class="p">(</span><span class="n">fileName</span><span class="p">);</span>
+    <span class="n">setStreamInfo</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">fileName</span><span class="p">);</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">getStreamInfo</span><span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span class="c1">/// Unfortunately, basic_ios::copyfmt() will copy across the pwords list unconditionally, which means the </span>
+<span class="n">template</span><span class="o">&lt;</span><span class="n">typename</span> <span class="no">C</span><span class="p">,</span> <span class="n">typename</span> <span class="no">T</span><span class="o">&gt;</span>
+<span class="k">void</span> <span class="n">copyfmt</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">basic_ios</span><span class="o">&lt;</span><span class="no">C</span><span class="p">,</span><span class="no">T</span><span class="o">&gt;&amp;</span> <span class="n">dest</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">basic_ios</span><span class="o">&lt;</span><span class="no">C</span><span class="p">,</span><span class="no">T</span><span class="o">&gt;&amp;</span> <span class="n">src</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">StreamInfo</span> <span class="n">info</span> <span class="o">=</span> <span class="n">getStreamInfo</span><span class="p">(</span><span class="n">dest</span><span class="p">);</span>
+    <span class="n">dest</span><span class="p">.</span><span class="n">copyfmt</span><span class="p">(</span><span class="n">src</span><span class="p">);</span>
+    <span class="n">setStreamInfo</span><span class="p">(</span><span class="n">dest</span><span class="p">,</span> <span class="n">info</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>, or provide a way to clone the stream
+for multithreaded processing instead of using locking</p>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:secondsight">
+<p>And to be honest, at least second, third, fourth, and fifth
+sight...&#160;<a class="footnote-backref" href="#fnref:secondsight" rev="footnote" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+<li id="fn:xallocpurpose">
+<p>Imagine implementing the <code>std::boolalpha</code> manipulator if it
+didn't already exist in the standard library - you'd need some way to attach the
+flag to the stream, and a way to retrieve it inside <code>operator&lt;&lt;(std::ostream&amp;, bool)</code>.&#160;<a class="footnote-backref" href="#fnref:xallocpurpose" rev="footnote" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div>
+  </div><!-- .content -->
+
+</section>
+
+
+    <!-- footer -->
+    <footer>
+      <p>
+        © Chris Foster, license <a href="https://creativecommons.org/licenses/by-sa/4.0/"> CC BY-SA</a>
+        unless otherwise noted.
+        Generated by <a href= "http://docs.getpelican.com/">Pelican</a> with
+        <a href="http://github.com/porterjamesj/crowsfoot">crowsfoot</a> theme.
+      </p>
+    </footer>
+  </body>
+</html>

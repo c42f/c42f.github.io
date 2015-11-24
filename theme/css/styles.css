@@ -39,6 +39,10 @@ body {
     width: 230px;
 }
 
+.siteimage img {
+    border-radius: 7px;
+}
+
 .sitetitle {
     font-family: 'Merriweather';
     font-weight: 300;
@@ -92,7 +96,8 @@ body {
     font-weight: 300;
 }
 
-.post {
+li.post {
+    list-style-type: lower-greek;
     margin-bottom: 20px;
 }
 
