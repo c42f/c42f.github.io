@@ -11,9 +11,9 @@ MENUITEMS = [('blog','/')]
 
 PROFILE_IMAGE_URL = "/images/chris.jpg"
 
-# Mathjax plugin from
-# https://github.com/amic-github/python-markdown-mathjax
-MD_EXTENSIONS = ['codehilite(css_class=highlight)','extra','mathjax','strikethrough']
+# To install the mathjax "math" plugin -
+# pip install python-markdown-math
+MD_EXTENSIONS = ['codehilite(css_class=highlight)','extra','math','strikethrough']
 
 PATH = 'content'
 STATIC_PATHS = ['images', 'blog']
