@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+      <title>Chris Foster</title>
+      <link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,600italic,700italic,400,600,700' rel='stylesheet' type='text/css' />
+      <link href='http://fonts.googleapis.com/css?family=Merriweather:300' rel='stylesheet' type='text/css'/>
+      <link href='http://fonts.googleapis.com/css?family=Source+Code+Pro:200,400,700' rel='stylesheet' type='text/css'/>
+      <link rel="stylesheet" type="text/css" href="/theme/css/icons.css"/>
+      <link rel="stylesheet" type="text/css" href="/theme/css/styles.css"/>
+      <meta charset="utf-8" />
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']], processEscapes: true}
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+
+  </head>
+
+  <body id="index">
+    <!-- header -->
+    <header class="siteheader">
+      <!-- site image -->
+        <div class= "siteimage">
+          <a class="nodec" href=/images/chris.jpg>
+            <img width="200" height="200" src=/images/chris.jpg>
+          </a>
+        </div>
+
+      <div class = "sitebanner">
+        <h1><a class="sitetitle nodec" href="">Chris Foster</a></h1>
+        <h3 class ="sitesubtitle">Yup, that's a blog alright</h3>
+        <!-- nav -->
+        <nav class="menu">
+          <ul>
+            <!-- menu items-->
+              <li><a class="nodec" href="/">blog</a></li>
+            <!--pages-->
+                <li><a class="nodec" href="/pages/about.html">about</a></li>
+            <!-- services icons -->
+              <li><a class="nodec icon-mail-alt" href="mailto:chris42f@gmail.com"></a></li>
+              <li><a class="nodec icon-github" href="http://github.com/c42f"></a></li>
+          </ul>
+        </nav>
+      </div> <!-- sitebanner -->
+    </header>
+
+    <!-- content -->
+
+<section class="content">
+
+  <h3 class="posttitle">
+    <a class="nodec" href="/2015/12/29/crisp-terminal-fonts.html" rel="bookmark" title="Permalink to Symbol fonts for linux terminals">
+      Symbol fonts for linux terminals
+    </a>
+  </h3>
+
+  <div class="postinfo">
+    <p class="published" title="2015-12-29T00:00:00+10:00">
+      Tue 29 December 2015
+    </p>
+
+  </div><!-- .postinfo -->
+
+  <div class="article">
+    <p>The <a href="http://julialang.org/">julia language</a> supports UTF-8 encoding by default,
+and this can be used to make code look a lot more like mathematical notation.
+Lately I'm finding this very nice for prototyping, and particularly for simple
+mathematical notation in code comments.  Unfortunately getting symbol fonts
+which look usably crisp at medium to small font sizes is not entirely simple: it
+requires modifying the fontconfig setup, and finally ditching xterm for
+something which can deal properly with unicode.</p>
+<p>I've used the Terminus bitmap font for years and it's left me with a taste for
+very crisp terminal fonts.  In a bitmap font, the glyphs are designed at a given
+size so that pixels are either on or off.  A well designed font like Terminus is
+about the sharpest thing you can hope for in a terminal, but comes without any
+scalability, and without glyphs for the unicode math symbols I'm suddenly
+wanting.</p>
+<h2>Goodbye xterm</h2>
+<p>xterm is a crufty old thing and has no hope when it comes to displaying symbols
+because it really doesn't support unicode at all.  A reasonable replacement is
+<code>urxvt</code>, but I went with <a href="http://st.suckless.org/">st</a> instead because it's
+tastefully minimal.  <code>st</code> is configured by editing the source <code>config.h</code> and
+various tweaks including adding Terminus as the font were quite easy.  I put my
+personal changes - including adding the scrollback buffer patches from the
+suckless wiki - <a href="https://github.com/c42f/st">up on github</a>.  (Subject to change
+at random whim, you've been warned ;-) )</p>
+<h2>Tweaking fontconfig</h2>
+<p>Even after setting up st, the symbol glyphs still looked awful, particularly ϕ
+which overflowed its box into the neighbouring glyph:</p>
+<p><img alt="Blurry default symbol fonts" src="/2015/12/29/default_blurry_symbols.png" /></p>
+<p>The resulting dive into the fontconfig font fallback system and font hinting
+setup was the real time waster of this whole exercise.  As it turned out the
+ugliness was due to two problems</p>
+<h3>Terminus doesn't have symbol glyphs</h3>
+<p>When a font doesn't have required glyphs, fontconfig gets them from a computed
+fallback font.  In this case the fallback turned out to be DejaVu Sans which
+combines pretty terribly, given that Terminus is very compact and DejaVu Sans
+isn't even fixed width!</p>
+<p>I found a
+<a href="http://eev.ee/blog/2015/05/20/i-stared-into-the-fontconfig-and-the-fontconfig-stared-back-at-me">useful and amusing blog post</a>
+by Eevee, recording some of the weird things fontconfig does when the font
+matching rules don't do what you expect.  Included are some useful debugging
+tips: To see the fallback list which will be considered, you need something like
+<code>fc-match -s Terminus</code>.  To see the actual font which would be used for a given
+character (μ say) you can use</p>
+<div class="highlight"><pre><span class="nv">DISPLAY</span><span class="o">=</span>:0 <span class="nv">FC_DEBUG</span><span class="o">=</span>4 pango-view --font<span class="o">=</span>terminus -t μ | grep family:
+</pre></div>
+
+
+<p>To fix the Terminus fallback, I hacked together a fontconfig conf file, and
+saved it to <code>.config/fontconfig/fonts.conf</code>.  Now, this was hacked together
+until it worked by skim reading a bunch of web pages rather than involving any
+real appreciation of the underlying system, so Caveat Emptor:</p>
+<div class="highlight"><pre><span class="cp">&lt;?xml version=&quot;1.0&quot;?&gt;</span>
+<span class="cp">&lt;!DOCTYPE fontconfig SYSTEM &quot;fonts.dtd&quot;&gt;</span>
+<span class="nt">&lt;fontconfig&gt;</span>
+  <span class="c">&lt;!-- Try to get a better fallback for greek symbols for use with Terminus --&gt;</span>
+  <span class="nt">&lt;alias&gt;</span>
+    <span class="nt">&lt;family&gt;</span>Terminus<span class="nt">&lt;/family&gt;</span>
+    <span class="nt">&lt;prefer&gt;</span>
+      <span class="nt">&lt;family&gt;</span>Liberation Mono<span class="nt">&lt;/family&gt;</span>
+      <span class="nt">&lt;family&gt;</span>Monospace<span class="nt">&lt;/family&gt;</span>
+    <span class="nt">&lt;/prefer&gt;</span>
+    <span class="nt">&lt;default&gt;&lt;family&gt;</span>DejaVu Sans Mono<span class="nt">&lt;/family&gt;&lt;/default&gt;</span>
+  <span class="nt">&lt;/alias&gt;</span>
+<span class="nt">&lt;/fontconfig&gt;</span>
+</pre></div>
+
+
+<p>I didn't find anything which was a perfect fit for Terminus, but Liberation Mono
+is a lot less bad than <code>DejaVu Sans</code>.  The <em>fixed width</em> <code>DejaVu Sans Mono</code> is
+actually pretty ok too.</p>
+<h3>Hinting woes with <code>hintslight</code></h3>
+<p>Even after all of the above, the symbol glyphs were still a blurry mess compared
+to Terminus, and switching st entirely to Liberation Mono didn't make things
+better.  Enter <em>hinting</em>, which modifies glyphs to fit crisply within the
+constraints of a pixel grid.  I found that xubuntu 14.04 ships with a default
+"hintslight" style in <code>/etc/fonts/conf.avail/10-hinting-slight.conf</code>, which
+really doesn't do much to address overly blurry terminal fonts.  This seems
+especially noticeable for light text on dark backgrounds.  Ok, we can hack that
+in, here's the config:</p>
+<div class="highlight"><pre><span class="cp">&lt;?xml version=&quot;1.0&quot;?&gt;</span>
+<span class="cp">&lt;!DOCTYPE fontconfig SYSTEM &quot;fonts.dtd&quot;&gt;</span>
+<span class="nt">&lt;fontconfig&gt;</span>
+  <span class="c">&lt;!-- Try to get a better fallback for greek symbols for use with Terminus --&gt;</span>
+  <span class="nt">&lt;alias&gt;</span>
+    <span class="nt">&lt;family&gt;</span>Terminus<span class="nt">&lt;/family&gt;</span>
+    <span class="nt">&lt;prefer&gt;</span>
+      <span class="nt">&lt;family&gt;</span>Liberation Mono<span class="nt">&lt;/family&gt;</span>
+      <span class="nt">&lt;family&gt;</span>Monospace<span class="nt">&lt;/family&gt;</span>
+    <span class="nt">&lt;/prefer&gt;</span>
+    <span class="nt">&lt;default&gt;&lt;family&gt;</span>DejaVu Sans Mono<span class="nt">&lt;/family&gt;&lt;/default&gt;</span>
+  <span class="nt">&lt;/alias&gt;</span>
+  <span class="c">&lt;!-- Use reasonable hinting.  Full hinting with hintfull really helps get</span>
+<span class="c">  crisp fonts in the terminal, but it&#39;s a bit stark for use on the web. --&gt;</span>
+  <span class="nt">&lt;match</span> <span class="na">target=</span><span class="s">&quot;font&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;edit</span> <span class="na">name=</span><span class="s">&quot;hintstyle&quot;</span> <span class="na">mode=</span><span class="s">&quot;assign&quot;</span><span class="nt">&gt;&lt;const&gt;</span>hintmedium<span class="nt">&lt;/const&gt;&lt;/edit&gt;</span>
+  <span class="nt">&lt;/match&gt;</span>
+<span class="nt">&lt;/fontconfig&gt;</span>
+</pre></div>
+
+
+<p><img alt="Relatively crisp symbols" src="/2015/12/29/crisp_symbols.png" /></p>
+<p>Now, this is still far from pretty, mainly due to the clash between the vertical
+compactness of Terminus with the relatively larger Liberation Mono.  However, it
+may have to be good enough unless I want to give up Terminus entirely.  In that
+case having hinting turned up a bit really saves the day by avoiding a blurry
+mess for all the usual latin glyphs which make up the bulk of text I'm likely to
+read in a terminal.</p>
+<h2>How many symbols are too many symbols?</h2>
+<p>So, now that I have beautiful crisp font rendering in my terminal emulator,
+it's ever so tempting to start using them all over the place.  Under the
+principle that code is more often read than written, it seems to make sense to
+use symbols to the extent that they aid readability.  This can be the case in
+mathematical code where a strong convention exists - using the conventional
+symbol conveys a lot of meaning in small space.  It can also help when
+transcribing existing notation into code, and it looks great in comments.</p>
+<p>Having said all that, I'm trying to restrain myself from going too symbol
+crazy.  The main problem is that symbols are harder to type (depending heavily
+on your text editor, keyboard setup, etc), and may be basically impossible for
+many users.  For people using non-unicode capable terminals such as xterm, they
+may even be impossible to see!  For this reason I think it's best to avoid
+using symbols in any public API, at least not without providing a well named
+ascii alternative.</p>
+<p><img alt="Too many symbols?" src="/2015/12/29/julia_unicode_session.png" /></p>
+  </div><!-- .content -->
+
+</section>
+
+
+    <!-- footer -->
+    <footer>
+      <p>
+        © Chris Foster, license <a href="https://creativecommons.org/licenses/by-sa/4.0/"> CC BY-SA</a>
+        unless otherwise noted.
+        Generated by <a href= "http://docs.getpelican.com/">Pelican</a> with
+        <a href="http://github.com/porterjamesj/crowsfoot">crowsfoot</a> theme.
+      </p>
+    </footer>
+  </body>
+</html>
