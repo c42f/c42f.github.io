@@ -2,6 +2,7 @@ Title: Symbol fonts for linux terminals
 Slug: crisp-terminal-fonts
 Date: 2015-12-29
 Summary: Crisp unicode symbol fonts in a minimal terminal
+Modified: 2016-01-13
 
 The [julia language](http://julialang.org/) supports UTF-8 encoding by default,
 and this can be used to make code look a lot more like mathematical notation.
@@ -39,8 +40,8 @@ which overflowed its box into the neighbouring glyph:
 ![Blurry default symbol fonts]({attach}default_blurry_symbols.png)
 
 The resulting dive into the fontconfig font fallback system and font hinting
-setup was the real time waster of this whole exercise.  As it turned out the
-ugliness was due to two problems
+setup was the real time waster of the whole exercise.  As it turned out the
+ugliness was due to three problems:
 
 ### Terminus doesn't have symbol glyphs
 
@@ -61,9 +62,9 @@ DISPLAY=:0 FC_DEBUG=4 pango-view --font=terminus -t μ | grep family:
 ```
 
 To fix the Terminus fallback, I hacked together a fontconfig conf file, and
-saved it to `.config/fontconfig/fonts.conf`.  Now, this was hacked together
-until it worked by skim reading a bunch of web pages rather than involving any
-real appreciation of the underlying system, so Caveat Emptor:
+saved it to `$HOME/.config/fontconfig/fonts.conf`.  Now, this was hacked
+together until it worked rather than involving any real appreciation of the
+underlying system, so Caveat Emptor:
 ```xml
 <?xml version="1.0"?>
 <!DOCTYPE fontconfig SYSTEM "fonts.dtd">
@@ -72,6 +73,7 @@ real appreciation of the underlying system, so Caveat Emptor:
   <alias>
     <family>Terminus</family>
     <prefer>
+      <family>Cousine</family>
       <family>Liberation Mono</family>
       <family>Monospace</family>
     </prefer>
@@ -80,61 +82,99 @@ real appreciation of the underlying system, so Caveat Emptor:
 </fontconfig>
 ```
 
-I didn't find anything which was a perfect fit for Terminus, but Liberation Mono
-is a lot less bad than `DejaVu Sans`.  The *fixed width* `DejaVu Sans Mono` is
-actually pretty ok too.
+I didn't find anything which was a perfect fit for Terminus, but the fixed width
+font `Cousine` from the Chrome OS core font set is a reasonable fit.  It's also
+got excellent coverage of the unicode mathematical symbols, much better than
+most of the other fonts I played with.  This turns out to be important for
+rendering the [greek phi](http://graphemica.com/%CF%95) in particular (UTF-8
+encoding `0xCF 0x95`).  I got lost here for a while by using `Liberation Mono`
+as a fallback which has most greek characters, but lacks the mathematical phi
+glyph, resulting in ongoing ugliness.  Other than that, `Liberation Mono` is a
+reasonable fallback, and the *fixed width* `DejaVu Sans Mono` is actually pretty
+ok too.  Any of these are a far better match than the variable width `DejaVu
+Sans` which fontconfig seems to choose by default.
+
+In any case, the Cousine fallback is quite reasonable, and I probably would have
+stopped there if not for the confusing with the missing `Liberation Mono` glyphs.
+
+![Cousine fallback]({attach}cousine_fallback.png)
 
 
 ### Hinting woes with `hintslight`
 
-Even after all of the above, the symbol glyphs were still a blurry mess compared
-to Terminus, and switching st entirely to Liberation Mono didn't make things
+Even after all of the above, the symbol glyphs are still relatively blurry
+compared to Terminus, and switching st entirely to Cousine didn't make things
 better.  Enter *hinting*, which modifies glyphs to fit crisply within the
 constraints of a pixel grid.  I found that xubuntu 14.04 ships with a default
 "hintslight" style in `/etc/fonts/conf.avail/10-hinting-slight.conf`, which
-really doesn't do much to address overly blurry terminal fonts.  This seems
-especially noticeable for light text on dark backgrounds.  Ok, we can hack that
-in, here's the config:
+looks nice in black-on-white colour schemes (eg, a web browser) but really
+doesn't do much to address overly blurry terminal fonts.  Ok, we can hack that
+in by adding an extra block to the config file:
 ```xml
-<?xml version="1.0"?>
-<!DOCTYPE fontconfig SYSTEM "fonts.dtd">
-<fontconfig>
-  <!-- Try to get a better fallback for greek symbols for use with Terminus -->
-  <alias>
-    <family>Terminus</family>
-    <prefer>
-      <family>Liberation Mono</family>
-      <family>Monospace</family>
-    </prefer>
-    <default><family>DejaVu Sans Mono</family></default>
-  </alias>
-  <!-- Use reasonable hinting.  Full hinting with hintfull really helps get
-  crisp fonts in the terminal, but it's a bit stark for use on the web. -->
   <match target="font">
-    <edit name="hintstyle" mode="assign"><const>hintmedium</const></edit>
+    <edit name="hintstyle" mode="assign"><const>hintfull</const></edit>
   </match>
-</fontconfig>
 ```
 
 ![Relatively crisp symbols]({attach}crisp_symbols.png)
 
-Now, this is still far from pretty, mainly due to the clash between the vertical
-compactness of Terminus with the relatively larger Liberation Mono.  However, it
-may have to be good enough unless I want to give up Terminus entirely.  In that
-case having hinting turned up a bit really saves the day by avoiding a blurry
-mess for all the usual latin glyphs which make up the bulk of text I'm likely to
-read in a terminal.
+In this sample, it's not clear this is making a real improvement, but the
+difference is more positive with a wider range of glyphs (for example, if I were
+to ditch Terminus entirely).  Unfortunately, I found this setting a bit stark
+for use in a web browser and other black-on-white colour schemes.  A hacky
+workaround is to restrict full hinting to only apply to Cousine, which works if
+it's not the default font in other applications:
+```xml
+  <match target="font">
+    <test name="family"> <string>Cousine</string> </test>
+    <edit name="hintstyle" mode="assign"><const>hintfull</const></edit>
+  </match>
+```
+
+Part of the reason this isn't a huge improvement is that the antialiasing of
+symbols is still greyscale.  On LCD monitors, each pixel is made up of
+RGB subpixels which are spatially separated.  Making use of this gives extra
+spatial resolution in the antialiased result.  To turn on subpixel antialiasing,
+the system needs to know the spatial arrangement of subpixels (RGB
+left-to-right, top-to-bottom, etc).  You can figure this out with a [specially
+designed raster](http://www.lagom.nl/lcd-test/subpixel.php).  My particular
+system is the most common RGB left-to-right, so adding the following block to
+the config file should do the trick:
+```xml
+  <match target="font">
+    <edit name="rgba" mode="assign"> <const>rgb</const> </edit>
+  </match>
+```
+... or not.  Forgetting Terminus for the moment, the above snippet does work
+fine if you ditch Terminus in st and use Cousine directly as the primary font:
+
+![Working subpixel hinting]({attach}cousine_subpixel.png)
+
+(Keep in mind that this image will only look good on your screen if (a) your
+subpixel layout is the same as mine, and (b) you view it at a scale of 1:1 pixel
+for pixel.)  The strange subpixel result brings us to the third problem.
 
 
-## How many symbols are too many symbols?
+### Subpixel hinting bugs
 
-So, now that I have beautiful crisp font rendering in my terminal emulator,
-it's ever so tempting to start using them all over the place.  Under the
+st, fontconfig or something else seems confused when using subpixel rendering
+and a mix of bitmap font (Terminus) and antialiased fallback font (Cousine).
+The result is that some glyphs are subpixel antialiased and some not, apparently
+at random.  As a further complication, even enabling subpixel antialiasing
+causes st to run extremely slowly when rendering a lot of symbols; clearly
+something odd is going on.  To be quite honest, I haven't figured out how to fix
+this yet, but it probably involves hacking the st source.
+
+
+## Aside: How many symbols are too many symbols?
+
+So, now that I have relatively crisp font rendering in my terminal emulator,
+it's ever so tempting to start using symbols all over the place.  Under the
 principle that code is more often read than written, it seems to make sense to
 use symbols to the extent that they aid readability.  This can be the case in
-mathematical code where a strong convention exists - using the conventional
-symbol conveys a lot of meaning in small space.  It can also help when
-transcribing existing notation into code, and it looks great in comments.
+mathematical code where using the conventional symbol conveys a lot of meaning
+in a small space.  It can also help when transcribing existing notation into
+code, and it looks great in comments.
 
 Having said all that, I'm trying to restrain myself from going too symbol
 crazy.  The main problem is that symbols are harder to type (depending heavily
