@@ -95,7 +95,7 @@ ok too.  Any of these are a far better match than the variable width `DejaVu
 Sans` which fontconfig seems to choose by default.
 
 In any case, the Cousine fallback is quite reasonable, and I probably would have
-stopped there if not for the confusing with the missing `Liberation Mono` glyphs.
+stopped there if not for the confusion with the missing `Liberation Mono` glyphs:
 
 ![Cousine fallback]({attach}cousine_fallback.png)
 
