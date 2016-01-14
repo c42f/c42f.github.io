@@ -77,7 +77,7 @@ reasonable fallback, and the &lt;em&gt;fixed width&lt;/em&gt; &lt;code&gt;DejaVu
 ok too.  Any of these are a far better match than the variable width &lt;code&gt;DejaVu
 Sans&lt;/code&gt; which fontconfig seems to choose by default.&lt;/p&gt;
 &lt;p&gt;In any case, the Cousine fallback is quite reasonable, and I probably would have
-stopped there if not for the confusing with the missing &lt;code&gt;Liberation Mono&lt;/code&gt; glyphs.&lt;/p&gt;
+stopped there if not for the confusion with the missing &lt;code&gt;Liberation Mono&lt;/code&gt; glyphs:&lt;/p&gt;
 &lt;p&gt;&lt;img alt="Cousine fallback" src="/2015/12/29/cousine_fallback.png" /&gt;&lt;/p&gt;
 &lt;h3&gt;Hinting woes with &lt;code&gt;hintslight&lt;/code&gt;&lt;/h3&gt;
 &lt;p&gt;Even after all of the above, the symbol glyphs are still relatively blurry
