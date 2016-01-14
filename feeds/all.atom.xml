@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Chris Foster</title><link href="/" rel="alternate"></link><link href="/feeds/all.atom.xml" rel="self"></link><id>/</id><updated>2015-12-29T00:00:00+10:00</updated><entry><title>Symbol fonts for linux terminals</title><link href="/2015/12/29/crisp-terminal-fonts.html" rel="alternate"></link><updated>2015-12-29T00:00:00+10:00</updated><author><name>Chris Foster</name></author><id>tag:,2015-12-29:2015/12/29/crisp-terminal-fonts.html</id><summary type="html">&lt;p&gt;The &lt;a href="http://julialang.org/"&gt;julia language&lt;/a&gt; supports UTF-8 encoding by default,
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Chris Foster</title><link href="/" rel="alternate"></link><link href="/feeds/all.atom.xml" rel="self"></link><id>/</id><updated>2016-01-13T00:00:00+10:00</updated><entry><title>Symbol fonts for linux terminals</title><link href="/2015/12/29/crisp-terminal-fonts.html" rel="alternate"></link><updated>2016-01-13T00:00:00+10:00</updated><author><name>Chris Foster</name></author><id>tag:,2015-12-29:2015/12/29/crisp-terminal-fonts.html</id><summary type="html">&lt;p&gt;The &lt;a href="http://julialang.org/"&gt;julia language&lt;/a&gt; supports UTF-8 encoding by default,
 and this can be used to make code look a lot more like mathematical notation.
 Lately I'm finding this very nice for prototyping, and particularly for simple
 mathematical notation in code comments.  Unfortunately getting symbol fonts
@@ -26,8 +26,8 @@ at random whim, you've been warned ;-) )&lt;/p&gt;
 which overflowed its box into the neighbouring glyph:&lt;/p&gt;
 &lt;p&gt;&lt;img alt="Blurry default symbol fonts" src="/2015/12/29/default_blurry_symbols.png" /&gt;&lt;/p&gt;
 &lt;p&gt;The resulting dive into the fontconfig font fallback system and font hinting
-setup was the real time waster of this whole exercise.  As it turned out the
-ugliness was due to two problems&lt;/p&gt;
+setup was the real time waster of the whole exercise.  As it turned out the
+ugliness was due to three problems:&lt;/p&gt;
 &lt;h3&gt;Terminus doesn't have symbol glyphs&lt;/h3&gt;
 &lt;p&gt;When a font doesn't have required glyphs, fontconfig gets them from a computed
 fallback font.  In this case the fallback turned out to be DejaVu Sans which
@@ -45,9 +45,9 @@ character (μ say) you can use&lt;/p&gt;
 
 
 &lt;p&gt;To fix the Terminus fallback, I hacked together a fontconfig conf file, and
-saved it to &lt;code&gt;.config/fontconfig/fonts.conf&lt;/code&gt;.  Now, this was hacked together
-until it worked by skim reading a bunch of web pages rather than involving any
-real appreciation of the underlying system, so Caveat Emptor:&lt;/p&gt;
+saved it to &lt;code&gt;$HOME/.config/fontconfig/fonts.conf&lt;/code&gt;.  Now, this was hacked
+together until it worked rather than involving any real appreciation of the
+underlying system, so Caveat Emptor:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cp"&gt;&amp;lt;?xml version=&amp;quot;1.0&amp;quot;?&amp;gt;&lt;/span&gt;
 &lt;span class="cp"&gt;&amp;lt;!DOCTYPE fontconfig SYSTEM &amp;quot;fonts.dtd&amp;quot;&amp;gt;&lt;/span&gt;
 &lt;span class="nt"&gt;&amp;lt;fontconfig&amp;gt;&lt;/span&gt;
@@ -55,6 +55,7 @@ real appreciation of the underlying system, so Caveat Emptor:&lt;/p&gt;
   &lt;span class="nt"&gt;&amp;lt;alias&amp;gt;&lt;/span&gt;
     &lt;span class="nt"&gt;&amp;lt;family&amp;gt;&lt;/span&gt;Terminus&lt;span class="nt"&gt;&amp;lt;/family&amp;gt;&lt;/span&gt;
     &lt;span class="nt"&gt;&amp;lt;prefer&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;family&amp;gt;&lt;/span&gt;Cousine&lt;span class="nt"&gt;&amp;lt;/family&amp;gt;&lt;/span&gt;
       &lt;span class="nt"&gt;&amp;lt;family&amp;gt;&lt;/span&gt;Liberation Mono&lt;span class="nt"&gt;&amp;lt;/family&amp;gt;&lt;/span&gt;
       &lt;span class="nt"&gt;&amp;lt;family&amp;gt;&lt;/span&gt;Monospace&lt;span class="nt"&gt;&amp;lt;/family&amp;gt;&lt;/span&gt;
     &lt;span class="nt"&gt;&amp;lt;/prefer&amp;gt;&lt;/span&gt;
@@ -64,54 +65,86 @@ real appreciation of the underlying system, so Caveat Emptor:&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;I didn't find anything which was a perfect fit for Terminus, but Liberation Mono
-is a lot less bad than &lt;code&gt;DejaVu Sans&lt;/code&gt;.  The &lt;em&gt;fixed width&lt;/em&gt; &lt;code&gt;DejaVu Sans Mono&lt;/code&gt; is
-actually pretty ok too.&lt;/p&gt;
+&lt;p&gt;I didn't find anything which was a perfect fit for Terminus, but the fixed width
+font &lt;code&gt;Cousine&lt;/code&gt; from the Chrome OS core font set is a reasonable fit.  It's also
+got excellent coverage of the unicode mathematical symbols, much better than
+most of the other fonts I played with.  This turns out to be important for
+rendering the &lt;a href="http://graphemica.com/%CF%95"&gt;greek phi&lt;/a&gt; in particular (UTF-8
+encoding &lt;code&gt;0xCF 0x95&lt;/code&gt;).  I got lost here for a while by using &lt;code&gt;Liberation Mono&lt;/code&gt;
+as a fallback which has most greek characters, but lacks the mathematical phi
+glyph, resulting in ongoing ugliness.  Other than that, &lt;code&gt;Liberation Mono&lt;/code&gt; is a
+reasonable fallback, and the &lt;em&gt;fixed width&lt;/em&gt; &lt;code&gt;DejaVu Sans Mono&lt;/code&gt; is actually pretty
+ok too.  Any of these are a far better match than the variable width &lt;code&gt;DejaVu
+Sans&lt;/code&gt; which fontconfig seems to choose by default.&lt;/p&gt;
+&lt;p&gt;In any case, the Cousine fallback is quite reasonable, and I probably would have
+stopped there if not for the confusing with the missing &lt;code&gt;Liberation Mono&lt;/code&gt; glyphs.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Cousine fallback" src="/2015/12/29/cousine_fallback.png" /&gt;&lt;/p&gt;
 &lt;h3&gt;Hinting woes with &lt;code&gt;hintslight&lt;/code&gt;&lt;/h3&gt;
-&lt;p&gt;Even after all of the above, the symbol glyphs were still a blurry mess compared
-to Terminus, and switching st entirely to Liberation Mono didn't make things
+&lt;p&gt;Even after all of the above, the symbol glyphs are still relatively blurry
+compared to Terminus, and switching st entirely to Cousine didn't make things
 better.  Enter &lt;em&gt;hinting&lt;/em&gt;, which modifies glyphs to fit crisply within the
 constraints of a pixel grid.  I found that xubuntu 14.04 ships with a default
 "hintslight" style in &lt;code&gt;/etc/fonts/conf.avail/10-hinting-slight.conf&lt;/code&gt;, which
-really doesn't do much to address overly blurry terminal fonts.  This seems
-especially noticeable for light text on dark backgrounds.  Ok, we can hack that
-in, here's the config:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cp"&gt;&amp;lt;?xml version=&amp;quot;1.0&amp;quot;?&amp;gt;&lt;/span&gt;
-&lt;span class="cp"&gt;&amp;lt;!DOCTYPE fontconfig SYSTEM &amp;quot;fonts.dtd&amp;quot;&amp;gt;&lt;/span&gt;
-&lt;span class="nt"&gt;&amp;lt;fontconfig&amp;gt;&lt;/span&gt;
-  &lt;span class="c"&gt;&amp;lt;!-- Try to get a better fallback for greek symbols for use with Terminus --&amp;gt;&lt;/span&gt;
-  &lt;span class="nt"&gt;&amp;lt;alias&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;family&amp;gt;&lt;/span&gt;Terminus&lt;span class="nt"&gt;&amp;lt;/family&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;prefer&amp;gt;&lt;/span&gt;
-      &lt;span class="nt"&gt;&amp;lt;family&amp;gt;&lt;/span&gt;Liberation Mono&lt;span class="nt"&gt;&amp;lt;/family&amp;gt;&lt;/span&gt;
-      &lt;span class="nt"&gt;&amp;lt;family&amp;gt;&lt;/span&gt;Monospace&lt;span class="nt"&gt;&amp;lt;/family&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;/prefer&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;default&amp;gt;&amp;lt;family&amp;gt;&lt;/span&gt;DejaVu Sans Mono&lt;span class="nt"&gt;&amp;lt;/family&amp;gt;&amp;lt;/default&amp;gt;&lt;/span&gt;
-  &lt;span class="nt"&gt;&amp;lt;/alias&amp;gt;&lt;/span&gt;
-  &lt;span class="c"&gt;&amp;lt;!-- Use reasonable hinting.  Full hinting with hintfull really helps get&lt;/span&gt;
-&lt;span class="c"&gt;  crisp fonts in the terminal, but it&amp;#39;s a bit stark for use on the web. --&amp;gt;&lt;/span&gt;
-  &lt;span class="nt"&gt;&amp;lt;match&lt;/span&gt; &lt;span class="na"&gt;target=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;font&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;edit&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;hintstyle&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;mode=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;assign&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&amp;lt;const&amp;gt;&lt;/span&gt;hintmedium&lt;span class="nt"&gt;&amp;lt;/const&amp;gt;&amp;lt;/edit&amp;gt;&lt;/span&gt;
+looks nice in black-on-white colour schemes (eg, a web browser) but really
+doesn't do much to address overly blurry terminal fonts.  Ok, we can hack that
+in by adding an extra block to the config file:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;  &lt;span class="nt"&gt;&amp;lt;match&lt;/span&gt; &lt;span class="na"&gt;target=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;font&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;edit&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;hintstyle&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;mode=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;assign&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&amp;lt;const&amp;gt;&lt;/span&gt;hintfull&lt;span class="nt"&gt;&amp;lt;/const&amp;gt;&amp;lt;/edit&amp;gt;&lt;/span&gt;
   &lt;span class="nt"&gt;&amp;lt;/match&amp;gt;&lt;/span&gt;
-&lt;span class="nt"&gt;&amp;lt;/fontconfig&amp;gt;&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;&lt;img alt="Relatively crisp symbols" src="/2015/12/29/crisp_symbols.png" /&gt;&lt;/p&gt;
-&lt;p&gt;Now, this is still far from pretty, mainly due to the clash between the vertical
-compactness of Terminus with the relatively larger Liberation Mono.  However, it
-may have to be good enough unless I want to give up Terminus entirely.  In that
-case having hinting turned up a bit really saves the day by avoiding a blurry
-mess for all the usual latin glyphs which make up the bulk of text I'm likely to
-read in a terminal.&lt;/p&gt;
-&lt;h2&gt;How many symbols are too many symbols?&lt;/h2&gt;
-&lt;p&gt;So, now that I have beautiful crisp font rendering in my terminal emulator,
-it's ever so tempting to start using them all over the place.  Under the
+&lt;p&gt;In this sample, it's not clear this is making a real improvement, but the
+difference is more positive with a wider range of glyphs (for example, if I were
+to ditch Terminus entirely).  Unfortunately, I found this setting a bit stark
+for use in a web browser and other black-on-white colour schemes.  A hacky
+workaround is to restrict full hinting to only apply to Cousine, which works if
+it's not the default font in other applications:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;  &lt;span class="nt"&gt;&amp;lt;match&lt;/span&gt; &lt;span class="na"&gt;target=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;font&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;test&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;family&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt; &lt;span class="nt"&gt;&amp;lt;string&amp;gt;&lt;/span&gt;Cousine&lt;span class="nt"&gt;&amp;lt;/string&amp;gt;&lt;/span&gt; &lt;span class="nt"&gt;&amp;lt;/test&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;edit&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;hintstyle&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;mode=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;assign&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&amp;lt;const&amp;gt;&lt;/span&gt;hintfull&lt;span class="nt"&gt;&amp;lt;/const&amp;gt;&amp;lt;/edit&amp;gt;&lt;/span&gt;
+  &lt;span class="nt"&gt;&amp;lt;/match&amp;gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Part of the reason this isn't a huge improvement is that the antialiasing of
+symbols is still greyscale.  On LCD monitors, each pixel is made up of
+RGB subpixels which are spatially separated.  Making use of this gives extra
+spatial resolution in the antialiased result.  To turn on subpixel antialiasing,
+the system needs to know the spatial arrangement of subpixels (RGB
+left-to-right, top-to-bottom, etc).  You can figure this out with a &lt;a href="http://www.lagom.nl/lcd-test/subpixel.php"&gt;specially
+designed raster&lt;/a&gt;.  My particular
+system is the most common RGB left-to-right, so adding the following block to
+the config file should do the trick:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;  &lt;span class="nt"&gt;&amp;lt;match&lt;/span&gt; &lt;span class="na"&gt;target=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;font&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;edit&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;rgba&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;mode=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;assign&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt; &lt;span class="nt"&gt;&amp;lt;const&amp;gt;&lt;/span&gt;rgb&lt;span class="nt"&gt;&amp;lt;/const&amp;gt;&lt;/span&gt; &lt;span class="nt"&gt;&amp;lt;/edit&amp;gt;&lt;/span&gt;
+  &lt;span class="nt"&gt;&amp;lt;/match&amp;gt;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;... or not.  Forgetting Terminus for the moment, the above snippet does work
+fine if you ditch Terminus in st and use Cousine directly as the primary font:&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Working subpixel hinting" src="/2015/12/29/cousine_subpixel.png" /&gt;&lt;/p&gt;
+&lt;p&gt;(Keep in mind that this image will only look good on your screen if (a) your
+subpixel layout is the same as mine, and (b) you view it at a scale of 1:1 pixel
+for pixel.)  The strange subpixel result brings us to the third problem.&lt;/p&gt;
+&lt;h3&gt;Subpixel hinting bugs&lt;/h3&gt;
+&lt;p&gt;st, fontconfig or something else seems confused when using subpixel rendering
+and a mix of bitmap font (Terminus) and antialiased fallback font (Cousine).
+The result is that some glyphs are subpixel antialiased and some not, apparently
+at random.  As a further complication, even enabling subpixel antialiasing
+causes st to run extremely slowly when rendering a lot of symbols; clearly
+something odd is going on.  To be quite honest, I haven't figured out how to fix
+this yet, but it probably involves hacking the st source.&lt;/p&gt;
+&lt;h2&gt;Aside: How many symbols are too many symbols?&lt;/h2&gt;
+&lt;p&gt;So, now that I have relatively crisp font rendering in my terminal emulator,
+it's ever so tempting to start using symbols all over the place.  Under the
 principle that code is more often read than written, it seems to make sense to
 use symbols to the extent that they aid readability.  This can be the case in
-mathematical code where a strong convention exists - using the conventional
-symbol conveys a lot of meaning in small space.  It can also help when
-transcribing existing notation into code, and it looks great in comments.&lt;/p&gt;
+mathematical code where using the conventional symbol conveys a lot of meaning
+in a small space.  It can also help when transcribing existing notation into
+code, and it looks great in comments.&lt;/p&gt;
 &lt;p&gt;Having said all that, I'm trying to restrain myself from going too symbol
 crazy.  The main problem is that symbols are harder to type (depending heavily
 on your text editor, keyboard setup, etc), and may be basically impossible for
