@@ -51,14 +51,6 @@ hardware, and also adding a few new devices. In the windows guest OS, this
 hardware will appear in the Device Manager and we'll need to install extra
 drivers in some cases.
 
-* To allow GPU passthrough, UEFI firmware should be selected on the
-  **Overview** page instead of BIOS, at least according to
-  [this article](https://taxes.moe/2017/07/08/linux-and-windows-running-simultaneously-with-gpu-passthrough/).
-  On ubuntu the open OVMF firmware implementation is provided by the
-  `ovmf` package which must be installed before restarting the virtio service
-  with `systemctl restart libvirt-bin.service`. Note that this unfortunately
-  has the side effect of breaking VM snapshots as they're
-  [not yet implemented with UEFI](https://www.redhat.com/archives/virt-tools-list/2017-September/msg00008.html).
 * Modify the **Disk** to use the VirtIO driver in `Advanced options->Disk bus`.
 * Modify the **NIC** device to use the VirtIO driver. This gives good
   performance, just note that you'll need to install the NetKVM driver as
@@ -133,7 +125,7 @@ menu. The VM screen should now resize with your host window. If not, you might
 have forgotten to install the SPICE guest or the spice hardware channel is not
 working.
 
-## Snapshot a clean state
+## Snapshot the clean state
 
 At this point it's worth creating a snapshot of the clean functioning system.
 It's probably a good idea to install all windows updates and perhaps some basic
@@ -231,6 +223,15 @@ My physical hardware is a 2018 Dell XPS 15 (9560) laptop which has the usual
 intel graphics, as well as a discrete NVidia GTX 1050 GPU. This is a GPU
 without a physical output; ie a muxless card, so
 <https://github.com/jscinoz/optimus-vfio-docs> probably applies.
+
+To allow GPU passthrough, UEFI firmware should be selected on the **Overview**
+page during VM hardware setup instead of BIOS, at least according to
+[this article](https://taxes.moe/2017/07/08/linux-and-windows-running-simultaneously-with-gpu-passthrough/).
+On ubuntu can open UEFI firmware implementation is provided by the
+`ovmf` package which must be installed before restarting the virtio service
+with `systemctl restart libvirt-bin.service`. Note that this unfortunately
+has the side effect of breaking VM snapshots as they're
+[not yet implemented with UEFI](https://www.redhat.com/archives/virt-tools-list/2017-September/msg00008.html).
 
 ### QEMU netdev user,smb
 
