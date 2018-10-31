@@ -159,6 +159,8 @@ work** when the guest VM is windows:
   out to be [extrodinarily difficult to debug](#qemu-netdev-usersmb) and more
   effort it's worth.
 
+### Setting up samba on the host
+
 So screw it, just manually set up a samba server on the host machine. For
 security you will want to restrict the network interfaces the samba server can
 bind to. By default, virt-manager creates a virtual bridge called `virbr0` on
@@ -194,10 +196,36 @@ as much as the host set up a special shared directory as follows:
     browseable = yes
 ```
 
+It's sometimes necessary to be able to execute files which you've generated on
+the samba share. For this you may need to turn off a security feature as
+[described](https://wiki.samba.org/index.php/Setting_up_a_Share_Using_POSIX_ACLs#Making_Files_Executable)
+on the samba wiki:
+
+```
+# Allow users to execute all files on the share
+acl allow execute always = True
+```
+
 Naturally you'll also need to restart smbd after these changes — on ubuntu with
 systemd use `sudo systemctl restart smbd`. You'll also need to add a samba
 password to your user with `sudo smbpasswd -a $your_user_name`
 
+
+### Mapping network drives on the guest
+
+Once all this is set up, map the network drive in the usual way on the guest
+side to avoid problems with ancient programs like `cmd` which don't understand
+UNC paths. A couple of traps to avoid:
+
+* Be sure to use the samba host name as the windows domain when mapping the
+  network drive or windows
+  [won't remember your credentials](https://superuser.com/questions/309570/windows-refuses-to-remember-network-share-credentials)
+  across a reboot.
+* The administrator account won't be able to see the mapped drive unless you
+  set a new registry key
+  `HKEY_LOCAL_MACHINE/SOFTWARE/Microsoft/Windows/CurrentVersion/Policies/System/EnableLinkedConnections`
+  DWORD to `1`. See [here](http://www.winability.com/how-to-make-elevated-programs-recognize-network-drives/)
+  for additional detail.
 
 ## Appendix — Other setup which I may revisit eventually
 
