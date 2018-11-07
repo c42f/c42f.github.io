@@ -31,9 +31,7 @@ git:
 before_install:
   - sed -i 's+git@github.com:+https://github.com/+' .gitmodules
   - git submodule update --init --recursive
-  - env | sed -e 's/=.*//'
-  - ls -a
-  - openssl aes-256-cbc -d -k $DEPKEY_KEY -in .github_deploy_key.enc -out github_deploy_key
+  - openssl aes-256-cbc -md sha256 -d -k $DEPKEY_KEY -in .github_deploy_key.enc -out github_deploy_key
   - chmod 600 github_deploy_key
   - eval $(ssh-agent -s)
   - ssh-add github_deploy_key
