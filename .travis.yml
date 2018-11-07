@@ -1,0 +1,39 @@
+# Travis CI pelican deploy guide:
+# https://zonca.github.io/2013/09/automatically-build-pelican-and-publish-to-github-pages.html
+branches:
+  only:
+  - src
+language: python
+python:
+  - 2.7
+install:
+  - pip install -r requirements.txt
+script:
+  - make html
+notifications:
+  email:
+    on_success: always
+    on_failure: always
+env:
+  global:
+  - secure: "rVTOVrcbFI8/5/ZWd5Yubuqf7eEmmkfS7sZ7vHQe2jtbAPfn7tS6jXIpy4odkNd2hvjrgf6rENFRTiCs+XGEaRY6ev84a9qP7xHlCzQ4XpG958m+XA4zdumvXJGNy/KmzdHT9UYX2NFtsnB6hCb/RwveEZlQOQgDDBVtNc+ZlN7EaJbTTGTNIut4MOJkBQrEGfzQ3mFtz6xjkQiPVh5r721f2Jv4/h4tsux9cP/91qmy6L7JVnQDDUcChG8wo1cE9RnkTaz3GEJEQ4ARq9goZ0nyHHW8D78ExGIW67/v0rM+XkBpxKlpCirYSIzIMzOkK61XrEkLWqVQ+YKDrClXUEbBZnIqkdyOkV0Shi8IEMbEKe4P8b6qO0D44EqfSr4AOXyDtflRbDyHMix7byMjj11LrmvUJP5rdkyJlpGz3mAvxCcS/3s0YHTwlb62Dd/cZ/fnurhoqWtI8F6YbE3SnVIXuzg5RWd4GV7V/Y4eNK4i1mjEh19AS0TGz9yhXqYbOVDxdJGMq9COQgtyOf3NwTVCPPraczqAFxJzmrRG/77Mx4Qd6relIRbAq/Yp8wAR9vz3oJXKIM3UPEQ04S41+sq5OQoWeH4qD7Ct2+KCgRWNJf880Z6///6QEmtL83tq8G8IfRDIYsTeQu9QFD8mXkljbJQurpV2NH4VxZP6L4Y="
+# For special logic for cloning submodules on Travis. See
+# https://gist.github.com/iedemam/9830045
+git:
+  submodules: false
+# For deploy key setup, see https://github.com/alrra/travis-scripts/blob/master/docs/github-deploy-keys.md
+# I used:
+# deploykey_enc_key=$(pwgen -s 64)
+# ssh-keygen -t rsa -b 4096 -f 'github_deploy_key' -N ''
+# openssl aes-256-cbc -k $deploykey_enc_key -in github_deploy_key -out .github_deploy_key.enc
+# travis encrypt deploykey_enc_key=$deploykey_enc_key
+# [manually add the key above]
+before_install:
+  - sed -i 's+git@github.com:+https://github.com/+' .gitmodules
+  - git submodule update --init --recursive
+  - openssl aes-256-cbc -d -k $deploykey_enc_key -in .github_deploy_key.enc -out github_deploy_key
+  - chmod 600 github_deploy_key
+  - eval $(ssh-agent -s)
+  - ssh-add github_deploy_key
+  - rm github_deploy_key
+after_success: bash deploy.sh
