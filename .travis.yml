@@ -16,22 +16,24 @@ notifications:
     on_failure: always
 env:
   global:
-  - secure: Q1gaHeD6DQKXaZD13JOw/4MohHeTV9e3oN0tiDXqSyiT7tZSkx5h+Tk8ikzbfXIhKxmDh7Nym53i2lY16Wuz3txaYQuKdChtqx+Ks9Jvb7j8CW6Dw6z4ZXdggzpCEGh0h8c06o9fkbXlwnVWJyGEol1CfPXeEPOaAlT197/e5riOH0lHAwiLDGRotjEFr3ivy8VtY0YTvo6EprWcQb9m/mQ/Je8kuK5vJIXTY0b7ImiS94Iu6s4lweXPU1Wesz9KnkhT6JV8fTCO47BKw5lipfC7GMijIpst+Uii5USVJgzJYvLdiq4KZC7/AKFRLNy/tysTOpFBd4JJ5ur/ZZwlWktr4AuxWfMxx0rBtiF7ZcvK6AyKd2keCR6f8tBd2Q5KVVbZ+fiLxYa5l45Ca2TXOyt5dbplduz4zeKseYS+ilNA+QnUh97aDzLYkeT/xDnkdhwraGnYZ3mr2xo2TYtHO4IFi/n7fay53yT7YiMCe55q0SaeTGeAaymLHAP6kj1Ekh8W3qb8VNOzO7ElFpTVnQZfoJGEmU+N/1DNViwGEcuA8WfOAOD9HhFGmRAOmFBccjHxc6ya5yBk+ZjpEwu5aO4pIvUiSlZL9bm8pmCfG4IfvNsAZ64LL8UTnZu3M6RDE3iPOCdZJBSMuwxoDKk8+NtLoj4VGY7vjFOp3pvHr6g=
+  - secure: Y00aQ/PZfQbtuJ85YdjBg3scAMHX3TYuFsbZXAueKI9CHBkS0nc7wHCMCzYeeadk9lixM2ilmOSg0BqmET7veviDa0b4tC/PaPrQdxfmUOyVpqvXrFn6yrEtzojDxPYSUQS0omM0hJ02mcCVn5czF1ZrSF46qhgJEri0VDcHUkWbgjxO1qjnEHjAXzWMH3+OZqSBS3qQ8vyLswWb842Gub4VAEbU2JqySy+LtgLa9PlHkQS73dSI7bXQBBazXP420zyD9ombTegtYh6Zwx8ddR/yNwPyGZn4JmX25WGaIt2xo739pZ337On+eSe6XuEH0OGanW4ZYh8U1BChFQmmWy1xAFfs9UZkB2yUpWNPZZxcdAkbhOda2Es+gihyHQvVVclFEaLJ8RNrHQE+o6pRC+2PBZddLiAAzdKGpj19OsYe9WSw5+SBEvGkUSI7ChpRMEJm+TlxRj7fDbTWYOpzLqicYEoCsD1L1C3zP1FOCT7XHJtNt2pjv01FNCXunCX+rKdkhExd2yTbOwYYqfsFE8LSt/bakuf8gtOS2bgD/dLRnz3nGbuolG4u8scKWtujBYQOQxvT+Y4n9EQyVjpoWsbpSPl6BlKh0UDJii7ydZkmdrDUzesJ4Ky2sUQSNOflGWTROTC9jd2cHl4EoUCgJ5Po9CI2DlviOrYJw1jUKDQ=
 # For special logic for cloning submodules on Travis. See
 # https://gist.github.com/iedemam/9830045
 git:
   submodules: false
 # For deploy key setup, see https://github.com/alrra/travis-scripts/blob/master/docs/github-deploy-keys.md
 # I used:
-# deploykey_enc_key=$(pwgen -s 64)
+# DEPKEY_KEY=$(pwgen -s 64)
 # ssh-keygen -t rsa -b 4096 -f 'github_deploy_key' -N ''
-# openssl aes-256-cbc -k $deploykey_enc_key -in github_deploy_key -out .github_deploy_key.enc
-# travis encrypt deploykey_enc_key=$deploykey_enc_key
+# openssl aes-256-cbc -k $DEPKEY_KEY -in github_deploy_key -out .github_deploy_key.enc
+# travis encrypt DEPKEY_KEY=$DEPKEY_KEY
 # [manually add the key above]
 before_install:
   - sed -i 's+git@github.com:+https://github.com/+' .gitmodules
   - git submodule update --init --recursive
-  - openssl aes-256-cbc -d -k $deploykey_enc_key -in .github_deploy_key.enc -out github_deploy_key
+  - env | sed -e 's/=.*//'
+  - ls -a
+  - openssl aes-256-cbc -d -k $DEPKEY_KEY -in .github_deploy_key.enc -out github_deploy_key
   - chmod 600 github_deploy_key
   - eval $(ssh-agent -s)
   - ssh-add github_deploy_key
