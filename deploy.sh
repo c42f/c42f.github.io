@@ -18,7 +18,7 @@ if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
     fi
     src_commit=$(git rev-parse --verify HEAD)
     # Using deploy key, clone the deploy branch
-    git clone --quiet --branch=$DEPLOY_BRANCH https://git@github.com/$TARGET_REPO built_website > /dev/null
+    git clone --quiet --branch=$DEPLOY_BRANCH git@github.com:$TARGET_REPO built_website > /dev/null
     #go into directory and copy data we're interested in to that directory
     cd built_website
     rsync -rv --exclude=.git  ../$PELICAN_OUTPUT_FOLDER/* .
