@@ -1,6 +1,6 @@
 Title: Windows develement from linux
 Slug: windows-gpu-dev-from-linux-kvm
-Date: 2018-07-16
+Date: 2018-11-07
 Summary: Windows development with KVM from the comfort of your linux host
 Status: draft
 
@@ -99,6 +99,7 @@ the NetKVM directory on the virtio-win CDROM.
 For all other drivers and tools, the fastest way to get things working is to
 install the "windows guest tools" from <https://www.spice-space.org/download.html>.
 This includes
+
 * The SPICE guest agent for desktop integration of copy/paste and window resizing.
 * The QEMU guest agent to allow graceful shutdown of the guest from the host.
 * Various drivers (memory Balloon driver, virtio serial controller)
@@ -109,6 +110,7 @@ and select a device from the tree.  The unknown VirtIO devices appear under
 "Other devices". You want to right click these and select `Update
 Driver->Browse my computer for Drivers`, entering the location of the CDROM
 with the virtio-win driver disk for example,
+
 * The Balloon driver, which lets the VM obtain addtional host memory (Balloon)
 * The serial controller (vioserial)
 * The VirtIO disk driver (viostor)
