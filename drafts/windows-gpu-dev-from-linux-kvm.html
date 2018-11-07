@@ -57,8 +57,8 @@
   </h3>
 
   <div class="postinfo">
-    <p class="published" title="2018-07-16T00:00:00+10:00">
-      Mon 16 July 2018
+    <p class="published" title="2018-11-07T00:00:00+10:00">
+      Wed 07 November 2018
     </p>
 
   </div><!-- .postinfo -->
@@ -150,25 +150,29 @@ Driver-&gt;Browse my computer for Drivers</code>, followed by entering the locat
 the NetKVM directory on the virtio-win CDROM.</p>
 <p>For all other drivers and tools, the fastest way to get things working is to
 install the "windows guest tools" from <a href="https://www.spice-space.org/download.html">https://www.spice-space.org/download.html</a>.
-This includes
-<em> The SPICE guest agent for desktop integration of copy/paste and window resizing.
-</em> The QEMU guest agent to allow graceful shutdown of the guest from the host.
-* Various drivers (memory Balloon driver, virtio serial controller)</p>
+This includes</p>
+<ul>
+<li>The SPICE guest agent for desktop integration of copy/paste and window resizing.</li>
+<li>The QEMU guest agent to allow graceful shutdown of the guest from the host.</li>
+<li>Various drivers (memory Balloon driver, virtio serial controller)</li>
+</ul>
 <p>In the event you've got to install other drivers and agents manually, the
 procedure is the same as the NetKVM one above: Open the windows Device Manager,
 and select a device from the tree.  The unknown VirtIO devices appear under
 "Other devices". You want to right click these and select <code>Update
 Driver-&gt;Browse my computer for Drivers</code>, entering the location of the CDROM
-with the virtio-win driver disk for example,
-<em> The Balloon driver, which lets the VM obtain addtional host memory (Balloon)
-</em> The serial controller (vioserial)
-<em> The VirtIO disk driver (viostor)
-</em> The qemu guest agent can be found in the virtio-win disk under
+with the virtio-win driver disk for example,</p>
+<ul>
+<li>The Balloon driver, which lets the VM obtain addtional host memory (Balloon)</li>
+<li>The serial controller (vioserial)</li>
+<li>The VirtIO disk driver (viostor)</li>
+<li>The qemu guest agent can be found in the virtio-win disk under
   libvirt guest-agent.  Running the installer should result in a new windows
-  service "QEMU guest agent" visible in the "Services" application.
-* Unfortunately the SPICE agent isn't available on the virtio-win driver disk,
+  service "QEMU guest agent" visible in the "Services" application.</li>
+<li>Unfortunately the SPICE agent isn't available on the virtio-win driver disk,
   so you'll have to get the installer for this from elsewhere to get
-  copy/paste/resizing working.</p>
+  copy/paste/resizing working.</li>
+</ul>
 <p>Once you've installed the drivers, restart the machine, and select the
 <code>View-&gt;Scale Display-&gt;Auto Resize VM with window</code> checkbox in the virt-manager
 menu. The VM screen should now resize with your host window. If not, you might
