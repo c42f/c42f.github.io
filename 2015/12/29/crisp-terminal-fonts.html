@@ -30,7 +30,7 @@
         </div>
 
       <div class = "sitebanner">
-        <h1><a class="sitetitle nodec" href="">Chris Foster</a></h1>
+        <h1><a class="sitetitle nodec" href="https://c42f.github.io">Chris Foster</a></h1>
         <h3 class ="sitesubtitle">Yup, that's a blog alright</h3>
         <!-- nav -->
         <nav class="menu">
@@ -38,7 +38,6 @@
             <!-- menu items-->
               <li><a class="nodec" href="/">blog</a></li>
             <!--pages-->
-                <li><a class="nodec" href="/pages/about.html">about</a></li>
             <!-- services icons -->
               <li><a class="nodec icon-mail-alt" href="mailto:chris42f@gmail.com"></a></li>
               <li><a class="nodec icon-github" href="http://github.com/c42f"></a></li>
@@ -90,7 +89,7 @@ at random whim, you've been warned ;-) )</p>
 <h2>Tweaking fontconfig</h2>
 <p>Even after setting up st, the symbol glyphs still looked awful, particularly ϕ
 which overflowed its box into the neighbouring glyph:</p>
-<p><img alt="Blurry default symbol fonts" src="/2015/12/29/default_blurry_symbols.png" /></p>
+<p><img alt="Blurry default symbol fonts" src="https://c42f.github.io/2015/12/29/default_blurry_symbols.png"></p>
 <p>The resulting dive into the fontconfig font fallback system and font hinting
 setup was the real time waster of the whole exercise.  As it turned out the
 ugliness was due to three problems:</p>
@@ -106,7 +105,7 @@ matching rules don't do what you expect.  Included are some useful debugging
 tips: To see the fallback list which will be considered, you need something like
 <code>fc-match -s Terminus</code>.  To see the actual font which would be used for a given
 character (μ say) you can use</p>
-<div class="highlight"><pre><span class="nv">DISPLAY</span><span class="o">=</span>:0 <span class="nv">FC_DEBUG</span><span class="o">=</span>4 pango-view --font<span class="o">=</span>terminus -t μ | grep family:
+<div class="highlight"><pre><span></span><span class="nv">DISPLAY</span><span class="o">=</span>:0 <span class="nv">FC_DEBUG</span><span class="o">=</span><span class="m">4</span> pango-view --font<span class="o">=</span>terminus -t μ <span class="p">|</span> grep family:
 </pre></div>
 
 
@@ -114,7 +113,7 @@ character (μ say) you can use</p>
 saved it to <code>$HOME/.config/fontconfig/fonts.conf</code>.  Now, this was hacked
 together until it worked rather than involving any real appreciation of the
 underlying system, so Caveat Emptor:</p>
-<div class="highlight"><pre><span class="cp">&lt;?xml version=&quot;1.0&quot;?&gt;</span>
+<div class="highlight"><pre><span></span><span class="cp">&lt;?xml version=&quot;1.0&quot;?&gt;</span>
 <span class="cp">&lt;!DOCTYPE fontconfig SYSTEM &quot;fonts.dtd&quot;&gt;</span>
 <span class="nt">&lt;fontconfig&gt;</span>
   <span class="c">&lt;!-- Try to get a better fallback for greek symbols for use with Terminus --&gt;</span>
@@ -144,7 +143,7 @@ ok too.  Any of these are a far better match than the variable width <code>DejaV
 Sans</code> which fontconfig seems to choose by default.</p>
 <p>In any case, the Cousine fallback is quite reasonable, and I probably would have
 stopped there if not for the confusion with the missing <code>Liberation Mono</code> glyphs:</p>
-<p><img alt="Cousine fallback" src="/2015/12/29/cousine_fallback.png" /></p>
+<p><img alt="Cousine fallback" src="https://c42f.github.io/2015/12/29/cousine_fallback.png"></p>
 <h3>Hinting woes with <code>hintslight</code></h3>
 <p>Even after all of the above, the symbol glyphs are still relatively blurry
 compared to Terminus, and switching st entirely to Cousine didn't make things
@@ -154,20 +153,20 @@ constraints of a pixel grid.  I found that xubuntu 14.04 ships with a default
 looks nice in black-on-white colour schemes (eg, a web browser) but really
 doesn't do much to address overly blurry terminal fonts.  Ok, we can hack that
 in by adding an extra block to the config file:</p>
-<div class="highlight"><pre>  <span class="nt">&lt;match</span> <span class="na">target=</span><span class="s">&quot;font&quot;</span><span class="nt">&gt;</span>
+<div class="highlight"><pre><span></span>  <span class="nt">&lt;match</span> <span class="na">target=</span><span class="s">&quot;font&quot;</span><span class="nt">&gt;</span>
     <span class="nt">&lt;edit</span> <span class="na">name=</span><span class="s">&quot;hintstyle&quot;</span> <span class="na">mode=</span><span class="s">&quot;assign&quot;</span><span class="nt">&gt;&lt;const&gt;</span>hintfull<span class="nt">&lt;/const&gt;&lt;/edit&gt;</span>
   <span class="nt">&lt;/match&gt;</span>
 </pre></div>
 
 
-<p><img alt="Relatively crisp symbols" src="/2015/12/29/crisp_symbols.png" /></p>
+<p><img alt="Relatively crisp symbols" src="https://c42f.github.io/2015/12/29/crisp_symbols.png"></p>
 <p>In this sample, it's not clear this is making a real improvement, but the
 difference is more positive with a wider range of glyphs (for example, if I were
 to ditch Terminus entirely).  Unfortunately, I found this setting a bit stark
 for use in a web browser and other black-on-white colour schemes.  A hacky
 workaround is to restrict full hinting to only apply to Cousine, which works if
 it's not the default font in other applications:</p>
-<div class="highlight"><pre>  <span class="nt">&lt;match</span> <span class="na">target=</span><span class="s">&quot;font&quot;</span><span class="nt">&gt;</span>
+<div class="highlight"><pre><span></span>  <span class="nt">&lt;match</span> <span class="na">target=</span><span class="s">&quot;font&quot;</span><span class="nt">&gt;</span>
     <span class="nt">&lt;test</span> <span class="na">name=</span><span class="s">&quot;family&quot;</span><span class="nt">&gt;</span> <span class="nt">&lt;string&gt;</span>Cousine<span class="nt">&lt;/string&gt;</span> <span class="nt">&lt;/test&gt;</span>
     <span class="nt">&lt;edit</span> <span class="na">name=</span><span class="s">&quot;hintstyle&quot;</span> <span class="na">mode=</span><span class="s">&quot;assign&quot;</span><span class="nt">&gt;&lt;const&gt;</span>hintfull<span class="nt">&lt;/const&gt;&lt;/edit&gt;</span>
   <span class="nt">&lt;/match&gt;</span>
@@ -183,7 +182,7 @@ left-to-right, top-to-bottom, etc).  You can figure this out with a <a href="htt
 designed raster</a>.  My particular
 system is the most common RGB left-to-right, so adding the following block to
 the config file should do the trick:</p>
-<div class="highlight"><pre>  <span class="nt">&lt;match</span> <span class="na">target=</span><span class="s">&quot;font&quot;</span><span class="nt">&gt;</span>
+<div class="highlight"><pre><span></span>  <span class="nt">&lt;match</span> <span class="na">target=</span><span class="s">&quot;font&quot;</span><span class="nt">&gt;</span>
     <span class="nt">&lt;edit</span> <span class="na">name=</span><span class="s">&quot;rgba&quot;</span> <span class="na">mode=</span><span class="s">&quot;assign&quot;</span><span class="nt">&gt;</span> <span class="nt">&lt;const&gt;</span>rgb<span class="nt">&lt;/const&gt;</span> <span class="nt">&lt;/edit&gt;</span>
   <span class="nt">&lt;/match&gt;</span>
 </pre></div>
@@ -191,7 +190,7 @@ the config file should do the trick:</p>
 
 <p>... or not.  Forgetting Terminus for the moment, the above snippet does work
 fine if you ditch Terminus in st and use Cousine directly as the primary font:</p>
-<p><img alt="Working subpixel hinting" src="/2015/12/29/cousine_subpixel.png" /></p>
+<p><img alt="Working subpixel hinting" src="https://c42f.github.io/2015/12/29/cousine_subpixel.png"></p>
 <p>(Keep in mind that this image will only look good on your screen if (a) your
 subpixel layout is the same as mine, and (b) you view it at a scale of 1:1 pixel
 for pixel.)  The strange subpixel result brings us to the third problem.</p>
@@ -218,7 +217,7 @@ many users.  For people using non-unicode capable terminals such as xterm, they
 may even be impossible to see!  For this reason I think it's best to avoid
 using symbols in any public API, at least not without providing a well named
 ascii alternative.</p>
-<p><img alt="Too many symbols?" src="/2015/12/29/julia_unicode_session.png" /></p>
+<p><img alt="Too many symbols?" src="https://c42f.github.io/2015/12/29/julia_unicode_session.png"></p>
   </div><!-- .content -->
 
 </section>

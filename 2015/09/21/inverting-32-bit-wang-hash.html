@@ -30,7 +30,7 @@
         </div>
 
       <div class = "sitebanner">
-        <h1><a class="sitetitle nodec" href="">Chris Foster</a></h1>
+        <h1><a class="sitetitle nodec" href="https://c42f.github.io">Chris Foster</a></h1>
         <h3 class ="sitesubtitle">Yup, that's a blog alright</h3>
         <!-- nav -->
         <nav class="menu">
@@ -38,7 +38,6 @@
             <!-- menu items-->
               <li><a class="nodec" href="/">blog</a></li>
             <!--pages-->
-                <li><a class="nodec" href="/pages/about.html">about</a></li>
             <!-- services icons -->
               <li><a class="nodec icon-mail-alt" href="mailto:chris42f@gmail.com"></a></li>
               <li><a class="nodec icon-github" href="http://github.com/c42f"></a></li>
@@ -68,7 +67,7 @@
     <p>A collegue at work recently asked for the inverse of the
 <a href="http://web.archive.org/web/20060507103516/http://www.cris.com/~Ttwang/tech/inthash.htm">2002 version</a><sup id="fnref:versionnote"><a class="footnote-ref" href="#fn:versionnote" rel="footnote">1</a></sup>
 of Thomas Wang's 32 bit mix function.  Here is a C++ implementation:</p>
-<div class="highlight"><pre><span class="kt">uint32_t</span> <span class="nf">inthash</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="n">key</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><span class="kt">uint32_t</span> <span class="nf">inthash</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="n">key</span><span class="p">)</span>
 <span class="p">{</span>
     <span class="n">key</span> <span class="o">+=</span> <span class="o">~</span><span class="p">(</span><span class="n">key</span> <span class="o">&lt;&lt;</span> <span class="mi">15</span><span class="p">);</span>
     <span class="n">key</span> <span class="o">^=</span> <span class="p">(</span><span class="n">key</span> <span class="o">&gt;&gt;</span> <span class="mi">10</span><span class="p">);</span>
@@ -90,10 +89,10 @@ It shows up in various places on the web, for example in the
 but a quick search didn't show up a solution for the 32 bit version.  This
 seemed like a <a href="https://xkcd.com/356">cute problem</a>, so rather than look around
 on the web I spent a few fun hours fiddling and came up with something.</p>
-<hr />
+<hr>
 <p>To make the data flow clearer, I think it helps to change notation to name all
 the states in the computation and avoid mutating <code>key</code>:</p>
-<div class="highlight"><pre><span class="kt">uint32_t</span> <span class="nf">hash</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="n">key</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><span class="kt">uint32_t</span> <span class="nf">hash</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="n">key</span><span class="p">)</span>
 <span class="p">{</span>
     <span class="kt">uint32_t</span> <span class="n">k0</span> <span class="o">=</span> <span class="n">key</span><span class="p">;</span>
     <span class="kt">uint32_t</span> <span class="n">k1</span> <span class="o">=</span> <span class="n">k0</span> <span class="o">+</span> <span class="o">~</span><span class="p">(</span><span class="n">k0</span> <span class="o">&lt;&lt;</span> <span class="mi">15</span><span class="p">);</span>
@@ -115,7 +114,7 @@ the states in the computation and avoid mutating <code>key</code>:</p>
 </ol>
 <p>All steps of the first type can be rewritten as combinations of multiplication
 and a bitwise negation.  For example (in mod 32 arithmetic):</p>
-<div class="highlight"><pre><span class="n">k1</span> <span class="o">=</span> <span class="n">k0</span> <span class="o">+</span> <span class="o">~</span><span class="p">(</span><span class="n">k0</span> <span class="o">&lt;&lt;</span> <span class="mi">15</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><span class="n">k1</span> <span class="o">=</span> <span class="n">k0</span> <span class="o">+</span> <span class="o">~</span><span class="p">(</span><span class="n">k0</span> <span class="o">&lt;&lt;</span> <span class="mi">15</span><span class="p">)</span>
    <span class="o">=</span> <span class="n">k0</span> <span class="o">-</span> <span class="p">(</span><span class="n">k0</span><span class="o">&lt;&lt;</span><span class="mi">15</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>    <span class="c1">// since  ~u + u + 1 = 0  for any u</span>
    <span class="o">=</span> <span class="n">k0</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span><span class="o">&lt;&lt;</span><span class="mi">15</span><span class="p">)</span><span class="o">*</span><span class="n">k0</span> <span class="o">-</span> <span class="mi">1</span>
    <span class="o">=</span> <span class="o">-</span><span class="p">((</span><span class="mi">1</span><span class="o">&lt;&lt;</span><span class="mi">15</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">k0</span> <span class="o">-</span> <span class="mi">1</span>
@@ -128,7 +127,7 @@ and a bitwise negation.  For example (in mod 32 arithmetic):</p>
 Obviously bitwise negation <code>~</code> is also invertible, so these types of steps are
 invertible.  The <a href="http://julialang.org">julia</a> language provides a handy
 implementation of the multiplicative inverse:</p>
-<div class="highlight"><pre><span class="n">julia</span><span class="o">&gt;</span> <span class="n">invmod</span><span class="p">(</span><span class="mi">2</span><span class="o">^</span><span class="mi">15</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="o">^</span><span class="mi">32</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">invmod</span><span class="p">(</span><span class="mi">2</span><span class="o">^</span><span class="mi">15</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="o">^</span><span class="mi">32</span><span class="p">)</span>
 <span class="mi">3221192703</span>
 </pre></div>
 
@@ -140,20 +139,20 @@ the 64 bit version</a>, so
 they're also invertible.</p>
 <p>The simplest example is <code>k6</code>: decompose <code>k5</code> and <code>k6</code> into low and high 16 bit
 parts:</p>
-<div class="highlight"><pre><span class="n">k5</span> <span class="o">=</span> <span class="p">(</span><span class="n">k5High</span><span class="o">&lt;&lt;</span><span class="mi">16</span><span class="p">)</span> <span class="o">+</span> <span class="n">k5Low</span>
+<div class="highlight"><pre><span></span><span class="n">k5</span> <span class="o">=</span> <span class="p">(</span><span class="n">k5High</span><span class="o">&lt;&lt;</span><span class="mi">16</span><span class="p">)</span> <span class="o">+</span> <span class="n">k5Low</span>
 <span class="n">k6</span> <span class="o">=</span> <span class="p">(</span><span class="n">k6High</span><span class="o">&lt;&lt;</span><span class="mi">16</span><span class="p">)</span> <span class="o">+</span> <span class="n">k6Low</span>
 </pre></div>
 
 
 <p>then <code>k6 = k5^(k5&gt;&gt;16)</code> is just</p>
-<div class="highlight"><pre><span class="n">k6High</span> <span class="o">=</span> <span class="n">k5High</span>
-<span class="n">k6Low</span> <span class="o">=</span> <span class="n">k5Low</span> <span class="o">^</span> <span class="n">k6High</span>   <span class="c1">// ^ is xor here!</span>
+<div class="highlight"><pre><span></span>k6High = k5High
+k6Low = k5Low ^ k6High   // ^ is xor here!
 </pre></div>
 
 
 <p>thus</p>
-<div class="highlight"><pre><span class="n">k5High</span> <span class="o">=</span> <span class="n">k6High</span>
-<span class="n">k5Low</span> <span class="o">=</span> <span class="n">k6Low</span> <span class="o">^</span> <span class="n">k6High</span>   <span class="c1">// a = b^c  &lt;=&gt;  a^c = b</span>
+<div class="highlight"><pre><span></span>k5High = k6High
+k5Low = k6Low ^ k6High   // a = b^c  &lt;=&gt;  a^c = b
 </pre></div>
 
 
@@ -171,7 +170,7 @@ to construct a non-iterative inverse.</p>
 <a href="https://github.com/andrewcooke/IntModN.jl">IntModN</a> package which makes it easy to work
 with GF(2), in particular inverting the matrix just uses the standard machinery
 (matlab, eat ya heart out!)</p>
-<div class="highlight"><pre><span class="n">julia</span><span class="o">&gt;</span> <span class="k">using</span> <span class="n">IntModN</span>
+<div class="highlight"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="k">using</span> <span class="n">IntModN</span>
 <span class="n">julia</span><span class="o">&gt;</span> <span class="kd">const</span> <span class="n">wordsize</span> <span class="o">=</span> <span class="mi">16</span>
 <span class="n">julia</span><span class="o">&gt;</span> <span class="n">make_matrix</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">=</span> <span class="n">map</span><span class="p">(</span><span class="n">GF2</span><span class="p">,</span> <span class="n">eye</span><span class="p">(</span><span class="kt">Int</span><span class="p">,</span> <span class="n">wordsize</span><span class="p">)</span> <span class="o">+</span>
                         <span class="n">diagm</span><span class="p">(</span><span class="n">ones</span><span class="p">(</span><span class="kt">Int</span><span class="p">,</span> <span class="n">wordsize</span><span class="o">-</span><span class="n">abs</span><span class="p">(</span><span class="n">n</span><span class="p">)),</span> <span class="o">-</span><span class="n">n</span><span class="p">))</span>
@@ -179,7 +178,7 @@ with GF(2), in particular inverting the matrix just uses the standard machinery
 <span class="c"># Matrix representing k4 = k3 ^ (k3 &gt;&gt; 6)</span>
 <span class="c"># In 16 bit arithmetic to keep matrix size managable:</span>
 <span class="n">julia</span><span class="o">&gt;</span> <span class="n">make_matrix</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
-<span class="mi">16</span><span class="n">x16</span> <span class="n">Array</span><span class="p">{</span><span class="n">IntModN</span><span class="o">.</span><span class="n">ZField</span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="kt">Int64</span><span class="p">},</span><span class="mi">2</span><span class="p">}:</span>
+<span class="mi">16</span><span class="n">x16</span> <span class="kt">Array</span><span class="p">{</span><span class="n">IntModN</span><span class="o">.</span><span class="n">ZField</span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="kt">Int64</span><span class="p">},</span><span class="mi">2</span><span class="p">}</span><span class="o">:</span>
  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
@@ -199,7 +198,7 @@ with GF(2), in particular inverting the matrix just uses the standard machinery
 
 <span class="c"># Now the inverse</span>
 <span class="n">julia</span><span class="o">&gt;</span> <span class="n">inv</span><span class="p">(</span><span class="n">make_matrix</span><span class="p">(</span><span class="mi">6</span><span class="p">))</span>
-<span class="mi">16</span><span class="n">x16</span> <span class="n">Array</span><span class="p">{</span><span class="n">IntModN</span><span class="o">.</span><span class="n">ZField</span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="kt">Int64</span><span class="p">},</span><span class="mi">2</span><span class="p">}:</span>
+<span class="mi">16</span><span class="n">x16</span> <span class="kt">Array</span><span class="p">{</span><span class="n">IntModN</span><span class="o">.</span><span class="n">ZField</span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="kt">Int64</span><span class="p">},</span><span class="mi">2</span><span class="p">}</span><span class="o">:</span>
  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="mi">0</span>
@@ -222,12 +221,12 @@ with GF(2), in particular inverting the matrix just uses the standard machinery
 <p>Each band of the inverse can be implemented with a bitshift.  In 16 bit
 arithmetic, this is <code>k3 = k4 ^ (k4&lt;&lt;6) ^ (k4&lt;&lt;12)</code>.  For the 32 bit case, we
 have:</p>
-<div class="highlight"><pre><span class="kt">uint32_t</span> <span class="n">k3</span> <span class="o">=</span> <span class="n">k4</span> <span class="o">^</span> <span class="p">(</span><span class="n">k4</span> <span class="o">&gt;&gt;</span> <span class="mi">6</span><span class="p">)</span> <span class="o">^</span> <span class="p">(</span><span class="n">k4</span> <span class="o">&gt;&gt;</span> <span class="mi">12</span><span class="p">)</span> <span class="o">^</span> <span class="p">(</span><span class="n">k4</span> <span class="o">&gt;&gt;</span> <span class="mi">18</span><span class="p">)</span> <span class="o">^</span> <span class="p">(</span><span class="n">k4</span> <span class="o">&gt;&gt;</span> <span class="mi">24</span><span class="p">)</span> <span class="o">^</span> <span class="p">(</span><span class="n">k4</span> <span class="o">&gt;&gt;</span> <span class="mi">30</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><span class="kt">uint32_t</span> <span class="n">k3</span> <span class="o">=</span> <span class="n">k4</span> <span class="o">^</span> <span class="p">(</span><span class="n">k4</span> <span class="o">&gt;&gt;</span> <span class="mi">6</span><span class="p">)</span> <span class="o">^</span> <span class="p">(</span><span class="n">k4</span> <span class="o">&gt;&gt;</span> <span class="mi">12</span><span class="p">)</span> <span class="o">^</span> <span class="p">(</span><span class="n">k4</span> <span class="o">&gt;&gt;</span> <span class="mi">18</span><span class="p">)</span> <span class="o">^</span> <span class="p">(</span><span class="n">k4</span> <span class="o">&gt;&gt;</span> <span class="mi">24</span><span class="p">)</span> <span class="o">^</span> <span class="p">(</span><span class="n">k4</span> <span class="o">&gt;&gt;</span> <span class="mi">30</span><span class="p">);</span>
 </pre></div>
 
 
 <p>Blah blah theory theory whatever just show the solution.  Ok, here's C++ code for the inverse:</p>
-<div class="highlight"><pre><span class="kt">uint32_t</span> <span class="nf">unhash</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="n">hashval</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><span class="kt">uint32_t</span> <span class="nf">unhash</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="n">hashval</span><span class="p">)</span>
 <span class="p">{</span>
     <span class="kt">uint32_t</span> <span class="n">k6</span> <span class="o">=</span> <span class="n">hashval</span><span class="p">;</span>
     <span class="kt">uint32_t</span> <span class="n">k5</span> <span class="o">=</span> <span class="n">k6</span> <span class="o">^</span> <span class="p">(</span><span class="n">k6</span> <span class="o">&gt;&gt;</span> <span class="mi">16</span><span class="p">);</span>
@@ -241,10 +240,10 @@ have:</p>
 </pre></div>
 
 
-<p>Here's a <a href="/2015/09/21/wang-hash-inverse.cpp">complete test program</a> which exhaustively
+<p>Here's a <a href="https://c42f.github.io/2015/09/21/wang-hash-inverse.cpp">complete test program</a> which exhaustively
 checks that <code>unhash(hash(i)) == i</code> for all $2^{32}$ possible values.</p>
 <div class="footnote">
-<hr />
+<hr>
 <ol>
 <li id="fn:versionnote">
 <p>There's more than one version of this hash, but I didn't realise
