@@ -13,7 +13,16 @@ PROFILE_IMAGE_URL = "/images/chris.jpg"
 
 # To install the mathjax "math" plugin -
 # pip install python-markdown-math
-MD_EXTENSIONS = ['codehilite(css_class=highlight)','extra','math','strikethrough']
+MARKDOWN = {
+    'extension_configs': {
+        'markdown.extensions.codehilite': {'css_class': 'highlight'},
+        'markdown.extensions.extra': {},
+        'markdown.extensions.meta': {},
+        'pymdownx.tilde': {},
+        'mdx_math': {},
+    },
+    'output_format': 'html5',
+}
 
 PATH = 'content'
 STATIC_PATHS = ['images', 'blog']

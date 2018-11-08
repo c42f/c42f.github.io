@@ -6,5 +6,4 @@
 conda activate
 conda create -n blog
 conda activate blog
-conda install markdown
-pip install pelican
+pip install -r requirements.txt
