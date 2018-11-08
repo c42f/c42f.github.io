@@ -45,7 +45,7 @@ body {
 
 .sitetitle {
     font-family: 'Merriweather';
-    font-weight: 300;
+    font-weight: 500;
     font-size: 4em;
     padding-left: 10px; /* Hack to dodge :hover issue. */
     position: relative; /* Hack to dodge :hover issue. */
@@ -154,12 +154,12 @@ sub {
 
 .article {
     margin-top: 30px;
+    line-height: 1.5;
 }
 
 /* Lists */
 
 .article * li {
-    line-height: 1.1em;
     margin-top: 0.3em;
     margin-bottom: 0.3em;
 }
@@ -167,7 +167,7 @@ sub {
 /* Paragraphs. */
 
 .article p {
-    line-height: 1.3em;
+    line-height: 1.5;
     margin-bottom: 1.5em;
 }
 
@@ -217,7 +217,7 @@ sub {
 /* Code */
 
 .codehilite, .highlight { /* Put code blocks in the right place. */
-    background-color:#fefefe;
+    background-color:#f0f0f0;
     width: 800px;
     margin: 0 0 0 0;
     margin-bottom: 20px;
@@ -226,17 +226,19 @@ sub {
     border-radius: 5px;
 }
 
+code, pre, tt {
+    font-family: 'Cousine';
+    font-size: 85%;
+}
+
 .article pre {
-    font-family: 'Source Code Pro';
-    font-size: .8em;
     margin: auto;
     padding: 1em;
     line-height: 120%;
 }
 
 .article code {
-    font-family: 'Source Code Pro';
-    font-size: 1em;
+    background-color: #f0f0f0;
 }
 
 /* Footer at page bottom */
