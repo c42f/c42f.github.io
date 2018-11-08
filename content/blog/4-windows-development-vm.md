@@ -2,7 +2,6 @@ Title: Windows Development in a KVM Virtual Machine
 Slug: windows-dev-from-linux-kvm
 Date: 2018-11-08
 Summary: Running windows in KVM to develop code from the comfort of your linux host
-Status: draft
 
 Although I prefer Linux as a development environment I've sometimes got to
 develop programs on Windows to support users of my open source work or to
