@@ -1,31 +1,35 @@
-Title: Windows develement from linux
-Slug: windows-gpu-dev-from-linux-kvm
-Date: 2018-11-07
-Summary: Windows development with KVM from the comfort of your linux host
+Title: Windows Development in a KVM Virtual Machine
+Slug: windows-dev-from-linux-kvm
+Date: 2018-11-08
+Summary: Running windows in KVM to develop code from the comfort of your linux host
 Status: draft
 
-# Notes on windows VM setup with KVM and libvirt
+Although I prefer Linux as a development environment I've sometimes got to
+develop programs on Windows to support users of my open source work or to
+interface with proprietary hardware and software. For example, I've recently
+been developing custom pulse programs to run on MRI scanners using the Siemens
+IDEA development environment, and this is restricted to various old versions of
+Windows.
 
-Occasionally I've got to do some windows development using proprietary
-development environments (for example, for Siemens MRI scanner hardware). On
-the other hand, I vastly prefer software development on a linux system and my
-other software can be developed there without an issue. A traditional solution
-is to dual-boot but this makes the cost of switching environments really high
-and I find that one system ends up abandoned fairly quickly.
+To make the development experience less painful, I've set up various versions of
+Linux and Windows in virtual machines running under the
+[KVM hypervisor](https://en.wikipedia.org/wiki/Kernel-based_Virtual_Machine).
+This means I'm able to do my main development on linux and also have access to
+a handy range of operating systems, all without ever rebooting the host system.
+The following are some notes on how I set this up with KVM and libvirt (with
+QEMU backend), and got a productive windows guest development environment
+running.  It's important to have good clipboard integration, file sharing, etc
+to make working between systems fairly seamless.
 
-So here's some notes on how I set this up with KVM and libvirt (with QEMU
-backend), and got a usable windows guest development environment running. I'm
-running ubuntu 18.04 as the host system, but the setup should apply to most
-linux distributions.
-
-The physical hardware is a 2018 Dell XPS 15 9560 laptop which has the Intel
-VT-x hardware virtualization support (`grep --color vmx /proc/cpuinfo`). It's
-got the usual intel graphics, as well as a discrete NVidia GTX 1050 GPU,
-currently disabled to avoid the extra power draw. I originally chose KVM
-because of the potential to do GPU passthrough though this turned out to be
-rather difficult on a laptop. My experience has been that KVM with virt-manager
-is less beginner friendly but cleaner overall than using virtualbox for the
-same thing.
+I'm running Ubuntu 18.04 as the host system, but the setup should apply to most
+linux distributions. The physical hardware is a 2018 Dell XPS 15 9560 laptop
+which has the Intel VT-x hardware virtualization support (`grep --color vmx
+/proc/cpuinfo`). It's got the usual Intel graphics, as well as a discrete
+NVidia GTX 1050 GPU, currently disabled to avoid the extra power draw. I
+originally chose KVM because of the potential to do GPU passthrough though this
+turned out to be rather difficult on a laptop. My experience has been that KVM
+with virt-manager is less beginner friendly but cleaner overall than using
+VirtualBox for the same thing.
 
 ## Hardware setup using virt-manager
 
@@ -51,13 +55,13 @@ hardware, and also adding a few new devices. In the windows guest OS, this
 hardware will appear in the Device Manager and we'll need to install extra
 drivers in some cases.
 
-* Modify the **Disk** to use the VirtIO driver in `Advanced options->Disk bus`.
-* Modify the **NIC** device to use the VirtIO driver. This gives good
+* Modify the *Disk* to use the VirtIO driver in `Advanced options->Disk bus`.
+* Modify the *NIC* device to use the VirtIO driver. This gives good
   performance, just note that you'll need to install the NetKVM driver as
   described below.
 * Create an additional new IDE CDROM with `Add Hardware->Storage->Select custom
   storage->CDROM device` so that we have access to the VirtIO
-  drivers during the install. As of this writing, ubuntu seems to provide
+  drivers during the install. As of this writing, Ubuntu seems to provide
   ancient VirtIO drivers, so you should download the
   [iso with RedHat virtio-win drivers](https://docs.fedoraproject.org/en-US/quick-docs/creating-windows-virtual-machines-using-virtio-drivers/index.html)
   instead and attach this to the new CDROM device. Note that the other CDROM
@@ -111,7 +115,7 @@ and select a device from the tree.  The unknown VirtIO devices appear under
 Driver->Browse my computer for Drivers`, entering the location of the CDROM
 with the virtio-win driver disk for example,
 
-* The Balloon driver, which lets the VM obtain addtional host memory (Balloon)
+* The Balloon driver, which lets the VM obtain additional host memory (Balloon)
 * The serial controller (vioserial)
 * The VirtIO disk driver (viostor)
 * The qemu guest agent can be found in the virtio-win disk under
@@ -158,7 +162,7 @@ work** when the guest VM is windows:
   isn't a viable option for reliable VM setup.
 * QEMU's `netdev user,smb` support *seems* to be a good option because it
   encapsulates the local file sharing along with the VM config. But it turns
-  out to be [extrodinarily difficult to debug](#qemu-netdev-usersmb) and more
+  out to be [extraordinarily difficult to debug](#qemu-netdev-usersmb) and more
   effort it's worth.
 
 ### Setting up samba on the host
@@ -208,7 +212,7 @@ on the samba wiki:
 acl allow execute always = True
 ```
 
-Naturally you'll also need to restart smbd after these changes — on ubuntu with
+Naturally you'll also need to restart smbd after these changes — on Ubuntu with
 systemd use `sudo systemctl restart smbd`. You'll also need to add a samba
 password to your user with `sudo smbpasswd -a $your_user_name`
 
@@ -223,13 +227,13 @@ UNC paths. A couple of traps to avoid:
   network drive or windows
   [won't remember your credentials](https://superuser.com/questions/309570/windows-refuses-to-remember-network-share-credentials)
   across a reboot.
-* The administrator account won't be able to see the mapped drive unless you
+* The administrator account may not be able to see the mapped drive unless you
   set a new registry key
   `HKEY_LOCAL_MACHINE/SOFTWARE/Microsoft/Windows/CurrentVersion/Policies/System/EnableLinkedConnections`
   DWORD to `1`. See [here](http://www.winability.com/how-to-make-elevated-programs-recognize-network-drives/)
   for additional detail.
 
-## Appendix — Other setup which I may revisit eventually
+## Appendix — Useful notes about things which didn't work
 
 Here's a few notes on things which didn't work out but which seemed worth
 recording.
@@ -250,14 +254,14 @@ GPU passthrough allows a physical GPU to be used directly by a virtual machine.
 [have](https://taxes.moe/2017/07/08/linux-and-windows-running-simultaneously-with-gpu-passthrough/)
 set this kind of thing up, often to run games in windows with a linux host.
 My physical hardware is a 2018 Dell XPS 15 (9560) laptop which has the usual
-intel graphics, as well as a discrete NVidia GTX 1050 GPU. This is a GPU
+Intel graphics, as well as a discrete NVidia GTX 1050 GPU. This is a GPU
 without a physical output; ie a muxless card, so
 <https://github.com/jscinoz/optimus-vfio-docs> probably applies.
 
 To allow GPU passthrough, UEFI firmware should be selected on the **Overview**
 page during VM hardware setup instead of BIOS, at least according to
 [this article](https://taxes.moe/2017/07/08/linux-and-windows-running-simultaneously-with-gpu-passthrough/).
-On ubuntu can open UEFI firmware implementation is provided by the
+On Ubuntu can open UEFI firmware implementation is provided by the
 `ovmf` package which must be installed before restarting the virtio service
 with `systemctl restart libvirt-bin.service`. Note that this unfortunately
 has the side effect of breaking VM snapshots as they're
@@ -267,11 +271,11 @@ has the side effect of breaking VM snapshots as they're
 
 QEMU's netdev user,smb support seems to be a good option because it
 encapsulates the local file sharing along with the VM config. I tried hard to
-get this working with an ubuntu 18.04 host, but eventually it proved more
+get this working with an Ubuntu 18.04 host, but eventually it proved more
 difficult than worthwhile. Nevertheless, here's some things I found out.
 
 I followed the [instructions here](https://unix.stackexchange.com/questions/188301/how-to-set-up-samba-sharing-with-libvirtd)
-to add the following to the vm config using `virsh edit`:
+to add the following to the VM config using `virsh edit`:
 
 ```
 <domain type='kvm' xmlns:qemu='http://libvirt.org/schemas/domain/qemu/1.0'>
@@ -290,7 +294,7 @@ Note that we can't do this directly in virt-manager, because it's not
 
 With this solution, we've also got to disable some apparmor security to
 allow samba to access /tmp and exec smbd. The simple way to do this is to
-diable apparmor for libvirtd completely using `sudo aa-disable libvirtd`.
+disable apparmor for libvirtd completely using `sudo aa-disable libvirtd`.
 (Note that you should think twice about this if you're going to run other
 untrusted VMs on the same machine!)
 
