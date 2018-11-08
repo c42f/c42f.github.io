@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+      <title>Chris Foster</title>
+      <link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,600italic,700italic,400,600,700' rel='stylesheet' type='text/css' />
+      <link href='http://fonts.googleapis.com/css?family=Merriweather:300' rel='stylesheet' type='text/css'/>
+      <link href='http://fonts.googleapis.com/css?family=Cousine' rel='stylesheet' type='text/css'/>
+      <link rel="stylesheet" type="text/css" href="/theme/css/icons.css"/>
+      <link rel="stylesheet" type="text/css" href="/theme/css/styles.css"/>
+      <meta charset="utf-8" />
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']], processEscapes: true}
+      });
+    </script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS_HTML"></script>
+
+  </head>
+
+  <body id="index">
+    <!-- header -->
+    <header class="siteheader">
+      <!-- site image -->
+        <div class= "siteimage">
+          <a class="nodec" href=/images/chris.jpg>
+            <img width="200" height="200" src=/images/chris.jpg>
+          </a>
+        </div>
+
+      <div class = "sitebanner">
+        <h1><a class="sitetitle nodec" href="https://c42f.github.io">Chris Foster</a></h1>
+        <h3 class ="sitesubtitle">Yup, that's a blog alright</h3>
+        <!-- nav -->
+        <nav class="menu">
+          <ul>
+            <!-- menu items-->
+              <li><a class="nodec" href="/">blog</a></li>
+            <!--pages-->
+            <!-- services icons -->
+              <li><a class="nodec icon-mail-alt" href="mailto:chris42f@gmail.com"></a></li>
+              <li><a class="nodec icon-github" href="http://github.com/c42f"></a></li>
+          </ul>
+        </nav>
+      </div> <!-- sitebanner -->
+    </header>
+
+    <!-- content -->
+
+<section class="content">
+
+  <h3 class="posttitle">
+    <a class="nodec" href="/2018/11/08/windows-dev-from-linux-kvm.html" rel="bookmark" title="Permalink to Windows Development in a KVM Virtual Machine">
+      Windows Development in a KVM Virtual Machine
+    </a>
+  </h3>
+
+  <div class="postinfo">
+    <p class="published" title="2018-11-08T00:00:00+10:00">
+      Thu 08 November 2018
+    </p>
+
+  </div><!-- .postinfo -->
+
+  <div class="article">
+    <p>Although I prefer Linux as a development environment I've sometimes got to
+develop programs on Windows to support users of my open source work or to
+interface with proprietary hardware and software. For example, I've recently
+been developing custom pulse programs to run on MRI scanners using the Siemens
+IDEA development environment, and this is restricted to various old versions of
+Windows.</p>
+<p>To make the development experience less painful, I've set up various versions of
+Linux and Windows in virtual machines running under the
+<a href="https://en.wikipedia.org/wiki/Kernel-based_Virtual_Machine">KVM hypervisor</a>.
+This means I'm able to do my main development on linux and also have access to
+a handy range of operating systems, all without ever rebooting the host system.
+The following are some notes on how I set this up with KVM and libvirt (with
+QEMU backend), and got a productive windows guest development environment
+running.  It's important to have good clipboard integration, file sharing, etc
+to make working between systems fairly seamless.</p>
+<p>I'm running Ubuntu 18.04 as the host system, but the setup should apply to most
+linux distributions. The physical hardware is a 2018 Dell XPS 15 9560 laptop
+which has the Intel VT-x hardware virtualization support (<code>grep --color vmx
+/proc/cpuinfo</code>). It's got the usual Intel graphics, as well as a discrete
+NVidia GTX 1050 GPU, currently disabled to avoid the extra power draw. I
+originally chose KVM because of the potential to do GPU passthrough though this
+turned out to be rather difficult on a laptop. My experience has been that KVM
+with virt-manager is less beginner friendly but cleaner overall than using
+VirtualBox for the same thing.</p>
+<h2>Hardware setup using virt-manager</h2>
+<p>Firstly, install the <code>virt-manager</code> package which provides a GUI which will let
+you configure VM hardware interactively, gives a list of VMs and a graphical
+console for each VM. Let's create a VM with the <code>virt-manager</code> GUI:</p>
+<ul>
+<li>Click <code>File-&gt;New Virtual Machine</code>.</li>
+<li>When starting from scratch you'll probably want "Local install media" to
+  point the system at a Windows 10 ISO or physical CDROM media. If
+  <code>virt-manager</code> doesn't autodetect the OS on the ISO correctly, you may want
+  to tell it which OS you're going to install so that some hardware defaults
+  are sensibly populated.</li>
+<li>Configure the next few pages of simple settings as you please until you get
+  to "Create a new virtual machine".  To set up some additional hardware,
+  you'll want to click the "Customize configuration before install" checkbox
+  before proceeding.</li>
+</ul>
+<p>Now set up the hardware to use VirtIO drivers where possible as these allow
+more direct and faster access to the host resources.  The hardware details
+GUI gives access to many options - we'll be modifying some of the (virtualized)
+hardware, and also adding a few new devices. In the windows guest OS, this
+hardware will appear in the Device Manager and we'll need to install extra
+drivers in some cases.</p>
+<ul>
+<li>Modify the <em>Disk</em> to use the VirtIO driver in <code>Advanced options-&gt;Disk bus</code>.</li>
+<li>Modify the <em>NIC</em> device to use the VirtIO driver. This gives good
+  performance, just note that you'll need to install the NetKVM driver as
+  described below.</li>
+<li>Create an additional new IDE CDROM with <code>Add Hardware-&gt;Storage-&gt;Select custom
+  storage-&gt;CDROM device</code> so that we have access to the VirtIO
+  drivers during the install. As of this writing, Ubuntu seems to provide
+  ancient VirtIO drivers, so you should download the
+  <a href="https://docs.fedoraproject.org/en-US/quick-docs/creating-windows-virtual-machines-using-virtio-drivers/index.html">iso with RedHat virtio-win drivers</a>
+  instead and attach this to the new CDROM device. Note that the other CDROM
+  device needs to be free so that it can be used for the windows install media.</li>
+<li>For a good experience sharing the mouse with the host, an emulated tablet is
+  better than a mouse, as it sends absolute rather than relative coordinates.
+  This will probably be added by default, but you can add it manually by adding
+  an "EvTouch USB graphics tablet" input device.</li>
+<li>For copy/paste integration and other guest agent interaction, you'll need a
+  VirtIO serial controller and guest agent channel.
+  Add a VirtIO serial controller with <code>Add Hardware-&gt;Controller-&gt;VirtIO Serial</code>.
+  Add a guest agent channel with <code>Add Hardware-&gt;Channel-&gt;Name="org.qemu.guest_agent.0"</code>.</li>
+<li>For installation, verify the boot order in <code>Boot Options</code>. For the first
+  boot, you should boot into the install media - probably <code>IDE CDROM 1</code> or some
+  such. On subsequent reboots you'll want the <code>VirtIO Disk 1</code> so that you boot
+  the installed OS. If you encounter the UEFI Boot console, you've probably got
+  the order wrong here and are trying to boot into the disk without an OS
+  installed.</li>
+</ul>
+<h2>Windows installation; virtio drivers and guest agent tools</h2>
+<p>Now that the hardware is configured, you can begin the software installation.
+The one tricky part is getting the VirtIO disk driver installed up front so
+that windows can see the virtual hard drive. You may need to click the
+"Advanced" install button or some such thing to get to the "Load driver"
+button. If you attached the virtio-win driver disk as suggested above, the
+drivers can be manually selected during setup from path like
+<code>E:\viostor\w10\amd64</code>. After installing these, you'll be able to see the
+virtual hard drive and you can just click through all the usual windows setup
+guff. </p>
+<p>After finishing the windows installation, there will be a few additional VirtIO
+drivers and guest agents to install. First, install the NetKVM driver to get
+your network working by opening <code>Device Manager</code> and selecting <code>Other
+devices-&gt;Ethernet Controller</code>. Right click this and select <code>Update
+Driver-&gt;Browse my computer for Drivers</code>, followed by entering the location of
+the NetKVM directory on the virtio-win CDROM.</p>
+<p>For all other drivers and tools, the fastest way to get things working is to
+install the "windows guest tools" from <a href="https://www.spice-space.org/download.html">https://www.spice-space.org/download.html</a>.
+This includes</p>
+<ul>
+<li>The SPICE guest agent for desktop integration of copy/paste and window resizing.</li>
+<li>The QEMU guest agent to allow graceful shutdown of the guest from the host.</li>
+<li>Various drivers (memory Balloon driver, virtio serial controller)</li>
+</ul>
+<p>In the event you've got to install other drivers and agents manually, the
+procedure is the same as the NetKVM one above: Open the windows Device Manager,
+and select a device from the tree.  The unknown VirtIO devices appear under
+"Other devices". You want to right click these and select <code>Update
+Driver-&gt;Browse my computer for Drivers</code>, entering the location of the CDROM
+with the virtio-win driver disk for example,</p>
+<ul>
+<li>The Balloon driver, which lets the VM obtain additional host memory (Balloon)</li>
+<li>The serial controller (vioserial)</li>
+<li>The VirtIO disk driver (viostor)</li>
+<li>The qemu guest agent can be found in the virtio-win disk under
+  libvirt guest-agent.  Running the installer should result in a new windows
+  service "QEMU guest agent" visible in the "Services" application.</li>
+<li>Unfortunately the SPICE agent isn't available on the virtio-win driver disk,
+  so you'll have to get the installer for this from elsewhere to get
+  copy/paste/resizing working.</li>
+</ul>
+<p>Once you've installed the drivers, restart the machine, and select the
+<code>View-&gt;Scale Display-&gt;Auto Resize VM with window</code> checkbox in the virt-manager
+menu. The VM screen should now resize with your host window. If not, you might
+have forgotten to install the SPICE guest or the spice hardware channel is not
+working.</p>
+<h2>Snapshot the clean state</h2>
+<p>At this point it's worth creating a snapshot of the clean functioning system.
+It's probably a good idea to install all windows updates and perhaps some basic
+software like a <a href="www.google.com/chrome">modern web browser</a>. Other than that
+keep it clean and minimal.</p>
+<p>When you're ready to make a snapshot, shut down the VM. In the <code>virt-manager</code>
+interface, select <code>View-&gt;Snapshots</code> and click the "Create new snapshot" button
+labelled with a <code>+</code> in the snapshots list.</p>
+<h2>Windows package management tools</h2>
+<p>If you're a linux dev you might not know that there's finally package managers
+for windows with a good range of dev tools. Use one. For example,
+<a href="https://chocolatey.org/">chocolatey</a> will save you heaps of time and sanity.</p>
+<h2>File sharing between linux hosts and windows guests</h2>
+<p>Firstly, note there are several attractive and obvious options which <strong>do not
+work</strong> when the guest VM is windows:</p>
+<ul>
+<li>You <em>can't</em> just add the obvious "Filesystem" device as
+  <a href="https://github.com/virtio-win/kvm-guest-drivers-windows/issues/126">virtfs/9p isn't yet supported</a>.
+  Signs are that it's also poorly supported on linux guests. Just forget it.</li>
+<li>Folder sharing <a href="https://www.spice-space.org/spice-user-manual.html#_folder_sharing">via SPICE webdav</a>
+  does work, but only seems good for one-off ad hoc sharing. My short
+  experience suggests that it's completely dependent on the SPICE viewer, so
+  isn't a viable option for reliable VM setup.</li>
+<li>QEMU's <code>netdev user,smb</code> support <em>seems</em> to be a good option because it
+  encapsulates the local file sharing along with the VM config. But it turns
+  out to be <a href="#qemu-netdev-usersmb">extraordinarily difficult to debug</a> and more
+  effort it's worth.</li>
+</ul>
+<h3>Setting up samba on the host</h3>
+<p>So screw it, just manually set up a samba server on the host machine. For
+security you will want to restrict the network interfaces the samba server can
+bind to. By default, virt-manager creates a virtual bridge called <code>virbr0</code> on
+the host and connects the VMs to that, so you'll need something like the
+following in your samba config file <code>/etc/samba/smb.conf</code>:</p>
+<div class="highlight"><pre><span></span># Only allow local VMs to see the samba server
+interfaces = virbr0
+bind interfaces only = yes
+</pre></div>
+
+
+<p>While you're at it, you may want to comment out the sections dealing with
+printers and add the following to disable them completely:</p>
+<div class="highlight"><pre><span></span># Disable printers
+load printers = no
+printing = bsd
+printcap name = /dev/null
+disable spoolss = yes
+</pre></div>
+
+
+<p>Shared samba folder setup is pretty standard and there's examples in
+<code>smb.conf</code>. You might share your home directory, or if you don't trust the VMs
+as much as the host set up a special shared directory as follows:</p>
+<div class="highlight"><pre><span></span># Share for all local VMs
+[vmshare]
+    path = /home/$your_user_name/vmshare
+    writable = yes
+    browseable = yes
+</pre></div>
+
+
+<p>It's sometimes necessary to be able to execute files which you've generated on
+the samba share. For this you may need to turn off a security feature as
+<a href="https://wiki.samba.org/index.php/Setting_up_a_Share_Using_POSIX_ACLs#Making_Files_Executable">described</a>
+on the samba wiki:</p>
+<div class="highlight"><pre><span></span># Allow users to execute all files on the share
+acl allow execute always = True
+</pre></div>
+
+
+<p>Naturally you'll also need to restart smbd after these changes — on Ubuntu with
+systemd use <code>sudo systemctl restart smbd</code>. You'll also need to add a samba
+password to your user with <code>sudo smbpasswd -a $your_user_name</code></p>
+<h3>Mapping network drives on the guest</h3>
+<p>Once all this is set up, map the network drive in the usual way on the guest
+side to avoid problems with ancient programs like <code>cmd</code> which don't understand
+UNC paths. A couple of traps to avoid:</p>
+<ul>
+<li>Be sure to use the samba host name as the windows domain when mapping the
+  network drive or windows
+  <a href="https://superuser.com/questions/309570/windows-refuses-to-remember-network-share-credentials">won't remember your credentials</a>
+  across a reboot.</li>
+<li>The administrator account may not be able to see the mapped drive unless you
+  set a new registry key
+  <code>HKEY_LOCAL_MACHINE/SOFTWARE/Microsoft/Windows/CurrentVersion/Policies/System/EnableLinkedConnections</code>
+  DWORD to <code>1</code>. See <a href="http://www.winability.com/how-to-make-elevated-programs-recognize-network-drives/">here</a>
+  for additional detail.</li>
+</ul>
+<h2>Appendix — Useful notes about things which didn't work</h2>
+<p>Here's a few notes on things which didn't work out but which seemed worth
+recording.</p>
+<h3>GPU passthrough</h3>
+<p>If you need to develop GPU code in a windows VM things are generally bad.
+However, with two GPUs, KVM can pass one piece of GPU hardware directly through
+to a VM, leaving the other for the host system. This should be a really great
+system for productive cross platform GPU development on the right hardware as
+of 2018. Sadly it's early days for getting this to work on <em>laptop</em> GPU
+hardware such as is contained in the XPS-15. Here's some notes and links I
+collected before I gave up on this for now:</p>
+<p>GPU passthrough allows a physical GPU to be used directly by a virtual machine.
+<a href="https://gist.github.com/Misairu-G/616f7b2756c488148b7309addc940b28">Several</a>
+<a href="https://davidyat.es/2016/09/08/gpu-passthrough/">people</a>
+<a href="https://taxes.moe/2017/07/08/linux-and-windows-running-simultaneously-with-gpu-passthrough/">have</a>
+set this kind of thing up, often to run games in windows with a linux host.
+My physical hardware is a 2018 Dell XPS 15 (9560) laptop which has the usual
+Intel graphics, as well as a discrete NVidia GTX 1050 GPU. This is a GPU
+without a physical output; ie a muxless card, so
+<a href="https://github.com/jscinoz/optimus-vfio-docs">https://github.com/jscinoz/optimus-vfio-docs</a> probably applies.</p>
+<p>To allow GPU passthrough, UEFI firmware should be selected on the <strong>Overview</strong>
+page during VM hardware setup instead of BIOS, at least according to
+<a href="https://taxes.moe/2017/07/08/linux-and-windows-running-simultaneously-with-gpu-passthrough/">this article</a>.
+On Ubuntu can open UEFI firmware implementation is provided by the
+<code>ovmf</code> package which must be installed before restarting the virtio service
+with <code>systemctl restart libvirt-bin.service</code>. Note that this unfortunately
+has the side effect of breaking VM snapshots as they're
+<a href="https://www.redhat.com/archives/virt-tools-list/2017-September/msg00008.html">not yet implemented with UEFI</a>.</p>
+<h3>QEMU netdev user,smb</h3>
+<p>QEMU's netdev user,smb support seems to be a good option because it
+encapsulates the local file sharing along with the VM config. I tried hard to
+get this working with an Ubuntu 18.04 host, but eventually it proved more
+difficult than worthwhile. Nevertheless, here's some things I found out.</p>
+<p>I followed the <a href="https://unix.stackexchange.com/questions/188301/how-to-set-up-samba-sharing-with-libvirtd">instructions here</a>
+to add the following to the VM config using <code>virsh edit</code>:</p>
+<div class="highlight"><pre><span></span><span class="nt">&lt;domain</span> <span class="na">type=</span><span class="s">&#39;kvm&#39;</span> <span class="na">xmlns:qemu=</span><span class="s">&#39;http://libvirt.org/schemas/domain/qemu/1.0&#39;</span><span class="nt">&gt;</span>
+...
+<span class="nt">&lt;qemu:commandline&gt;</span>
+  <span class="nt">&lt;qemu:arg</span> <span class="na">value=</span><span class="s">&#39;-netdev&#39;</span><span class="nt">/&gt;</span>
+  <span class="nt">&lt;qemu:arg</span> <span class="na">value=</span><span class="s">&#39;user,smb=/home/$your_user_name/win10,id=smb0,smbserver=10.0.2.4&#39;</span><span class="nt">/&gt;</span>
+  <span class="nt">&lt;qemu:arg</span> <span class="na">value=</span><span class="s">&#39;-device&#39;</span><span class="nt">/&gt;</span>
+  <span class="nt">&lt;qemu:arg</span> <span class="na">value=</span><span class="s">&#39;virtio-net-pci,netdev=smb0&#39;</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/qemu:commandline&gt;</span>
+<span class="nt">&lt;/domain&gt;</span>
+</pre></div>
+
+
+<p>Note that we can't do this directly in virt-manager, because it's not
+<a href="https://bugzilla.redhat.com/show_bug.cgi?id=1459995">not natively supported by libvirt</a>.</p>
+<p>With this solution, we've also got to disable some apparmor security to
+allow samba to access /tmp and exec smbd. The simple way to do this is to
+disable apparmor for libvirtd completely using <code>sudo aa-disable libvirtd</code>.
+(Note that you should think twice about this if you're going to run other
+untrusted VMs on the same machine!)</p>
+<p>If I remember correctly, the above gives you a read only share to the guest.
+However, I eventually gave up on this because it was so difficult to debug.</p>
+  </div><!-- .content -->
+
+</section>
+
+
+    <!-- footer -->
+    <footer>
+      <p>
+        © Chris Foster, license <a href="https://creativecommons.org/licenses/by-sa/4.0/"> CC BY-SA</a>
+        unless otherwise noted.
+        Generated by <a href= "http://docs.getpelican.com/">Pelican</a> with
+        <a href="http://github.com/porterjamesj/crowsfoot">crowsfoot</a> theme.
+      </p>
+    </footer>
+  </body>
+</html>
