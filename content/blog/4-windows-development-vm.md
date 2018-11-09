@@ -3,34 +3,37 @@ Slug: windows-dev-from-linux-kvm
 Date: 2018-11-08
 Summary: Running windows in KVM to develop code from the comfort of your linux host
 
-Although I prefer Linux as a development environment I've sometimes got to
-develop programs on Windows to support users of my open source work or to
-interface with proprietary hardware and software. For example, I've recently
-been developing custom pulse programs to run on MRI scanners using the Siemens
-IDEA development environment, and this is restricted to various old versions of
-Windows.
+I love Linux as an operating system for software development. It has a powerful
+set of flexible tools for creating, analyzing and building source code and
+binaries. The unix philosophy means that a quick script can *compose* the tools
+together to generate a [*cartesian product*](https://en.wikipedia.org/wiki/Cartesian_product)
+of functionality. That is, the number of distinct uses for your toolset grows
+exponentially rather than linearly with the number of tools. It's great.
 
-To make the development experience less painful, I've set up various versions of
-Linux and Windows in virtual machines running under the
+However, sometimes I've got to develop programs for Windows — either to support
+users of my open source work or to interface with proprietary hardware and
+software. Windows has great developer tools too, but their flavour is generally
+less composable and more monolithic. To have access to a handy range of
+operating systems without rebooting, I've recently set up Windows in a virtual
+machine running under the
 [KVM hypervisor](https://en.wikipedia.org/wiki/Kernel-based_Virtual_Machine).
-This means I'm able to do my main development on linux and also have access to
-a handy range of operating systems, all without ever rebooting the host system.
+
 The following are some notes on how I set this up with KVM and libvirt (with
 QEMU backend), and got a productive windows guest development environment
-running.  It's important to have good clipboard integration, file sharing, etc
-to make working between systems fairly seamless.
+running. It's important to have good clipboard integration, file sharing, etc
+to make working between systems fairly seamless. I originally chose KVM because
+of the potential to do GPU passthrough though this turned out to be rather
+difficult on a laptop.
+
+### The host environment
 
 I'm running Ubuntu 18.04 as the host system, but the setup should apply to most
 linux distributions. The physical hardware is a 2018 Dell XPS 15 9560 laptop
-which has the Intel VT-x hardware virtualization support (`grep --color vmx
+which has Intel VT-x hardware virtualization support (`grep --color vmx
 /proc/cpuinfo`). It's got the usual Intel graphics, as well as a discrete
-NVidia GTX 1050 GPU, currently disabled to avoid the extra power draw. I
-originally chose KVM because of the potential to do GPU passthrough though this
-turned out to be rather difficult on a laptop. My experience has been that KVM
-with virt-manager is less beginner friendly but cleaner overall than using
-VirtualBox for the same thing.
+NVidia GTX 1050 GPU, currently disabled to avoid the extra power draw.
 
-## Hardware setup using virt-manager
+## Virtual hardware setup using virt-manager
 
 Firstly, install the `virt-manager` package which provides a GUI which will let
 you configure VM hardware interactively, gives a list of VMs and a graphical
@@ -232,7 +235,54 @@ UNC paths. A couple of traps to avoid:
   DWORD to `1`. See [here](http://www.winability.com/how-to-make-elevated-programs-recognize-network-drives/)
   for additional detail.
 
-## Appendix — Useful notes about things which didn't work
+## Networking your virtual machines together
+
+Network setup with KVM is very straightforward. By default, libvirt attaches
+all machines to a virtual bridge on the same "default" network, with new
+virtual machines getting an IP address via normal DHCP from a special instance
+of `dnsmasq` bound to the bridge.
+
+### Setting host names and static IP addresses
+
+The simplest way to make virtual machines talk to each other is by associating
+a static IP address and host name to the MAC (hardware) address of each
+machine's virtual network card. For the default network you can do this with
+the command `virsh net-edit default`, making the `dhcp` section look something
+like the following:
+
+```xml
+    <dhcp>
+      <range start='192.168.122.2' end='192.168.122.254'/>
+      <host mac='52:54:00:57:02:25' name='windows_box' ip='192.168.122.10'/>
+      <host mac='52:54:00:5a:8d:f1' name='linux_box' ip='192.168.122.11'/>
+    </dhcp>
+```
+
+Here you'll need to fill in your own `mac` values which you can find in the
+output of `virsh net-dhcp-leases default`. Now reboot the virtual switch:
+
+```bash
+virsh net-destroy default
+virsh net-start default
+```
+
+It's also possible to set up custom name resolution for the virtual network by
+adding lines such as `<domain name='blah.com' localOnly='yes'/>` to the network
+configuration as
+[described here](https://liquidat.wordpress.com/2017/03/03/howto-automated-dns-resolution-for-kvmlibvirt-guests-with-a-local-domain).
+
+## Summary
+
+So, was learning to use libvirt worth all this effort compared to using
+VirtualBox as I've done in the past? So far I'd say cautiously yes; the time
+investment has been higher, but it feels like the underlying tooling is
+generally better and *more composable*. One last thing — you should try out the
+interactive `virsh` shell as a powerful way to do everything that virt-manager
+does and more.
+
+------------------------------
+
+## Appendix
 
 Here's a few notes on things which didn't work out but which seemed worth
 recording.
