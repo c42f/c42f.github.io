@@ -85,10 +85,22 @@ body {
 }
 
 .postinfo {
-    margin-top: 5px;
-    margin-bottom: 10px;
+    margin-top: 1em;
     color: #666;
     font-size: .7em;
+    margin-bottom: 2em;
+    padding-bottom: 0.5em;
+    border-bottom: 2px solid #eaecef;
+}
+
+/* Override some decorations for the post list.  Ideally this would just be
+ * added to .postinfo for the main posts (rather overriding it for the
+ * postlist) but I couldn't get the :not() selector to work like I wanted */
+ol#postlist .postinfo {
+    margin-top: 0.3em;
+    border-bottom: 0;
+    padding-bottom: 0;
+    margin-bottom: 0.7em;
 }
 
 .postsummary {
@@ -129,8 +141,8 @@ a:hover { /* Hover style: transition to orange. Cool! */
 
 .content ol, .content ul {
     position: relative;
-    left: 40px;
-    padding-bottom: 20px;
+    margin-left: 2em;
+    padding-bottom: 1em;
 }
 
 /* Make super and subscipts look reasonable. */
@@ -154,7 +166,7 @@ sub {
 
 .article {
     margin-top: 30px;
-    line-height: 1.5;
+    line-height: 1.5em;
 }
 
 /* Lists */
@@ -167,20 +179,24 @@ sub {
 /* Paragraphs. */
 
 .article p {
-    line-height: 1.5;
+    line-height: 1.5em;
     margin-bottom: 1.5em;
 }
 
 /* Headers. */
 
 .article h1 {
-    padding-bottom: 1em;
     font-size: 1.4em;
+    border-bottom: 2px solid #eaecef;
+    padding-bottom: 0.4em;
+    margin-bottom: 0.6em;
 }
 
 .article h2 {
-    padding-bottom: 0.9em;
     font-size: 1.2em;
+    border-bottom: 1px solid #eaecef;
+    padding-bottom: 0.3em;
+    margin-bottom: 0.5em;
 }
 
 .article h3 {
@@ -239,6 +255,7 @@ code, pre, tt {
 
 .article code {
     background-color: #f0f0f0;
+    white-space: nowrap;
 }
 
 /* Footer at page bottom */
