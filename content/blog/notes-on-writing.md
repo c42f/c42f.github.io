@@ -14,3 +14,7 @@ Start with the problem, not the solution.  Make people understand the
 [headache before pointing out the asprin](http://mkremins.github.io/blog/doors-headaches-intellectual-need/).
 Then again, who is the audience?  If they've googled their problem, they
 probably have the headache already.
+
+For technical documentation, it can be useful to frame the work as several
+sections: Explanation, Tutorials, Howtos and Reference, as
+[described here](https://www.divio.com/blog/documentation/).
