@@ -258,10 +258,19 @@ acl allow execute always = True
 systemd use <code>sudo systemctl restart smbd</code>. You'll also need to add a samba
 password to your user with <code>sudo smbpasswd -a $your_user_name</code></p>
 <h3>Mapping network drives on the guest</h3>
-<p>Once all this is set up, map the network drive in the usual way on the guest
-side to avoid problems with ancient programs like <code>cmd</code> which don't understand
-UNC paths. A couple of traps to avoid:</p>
+<p>Once all this is set up, map the network drive in
+<a href="https://support.microsoft.com/en-au/help/4026635/windows-map-a-network-drive">the usual way</a>
+on the guest side to avoid problems with ancient programs like <code>cmd</code> which
+don't understand UNC paths.</p>
+<p>A couple of traps to avoid:</p>
 <ul>
+<li>On windows 10 you <em>won't</em> be able to browse the samba network shares but you
+  can still map the network drive if you know the host name and share name.
+  This is because samba
+  <a href="https://superuser.com/questions/1322497/did-windows-10-april-update-break-network-discovery-and-samba-support">doesn't yet support the ws-discovery protocol</a>,
+  and microsoft have deprecated the old SMB-1.0 protocol. You can re-enable
+  SMB-1.0 via the "Windows Features" dialog, but microsoft may well remove
+  support for it completely in the near future.</li>
 <li>Be sure to use the samba host name as the windows domain when mapping the
   network drive or windows
   <a href="https://superuser.com/questions/309570/windows-refuses-to-remember-network-share-credentials">won't remember your credentials</a>
