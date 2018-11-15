@@ -221,10 +221,20 @@ password to your user with `sudo smbpasswd -a $your_user_name`
 
 ### Mapping network drives on the guest
 
-Once all this is set up, map the network drive in the usual way on the guest
-side to avoid problems with ancient programs like `cmd` which don't understand
-UNC paths. A couple of traps to avoid:
+Once all this is set up, map the network drive in
+[the usual way](https://support.microsoft.com/en-au/help/4026635/windows-map-a-network-drive)
+on the guest side to avoid problems with ancient programs like `cmd` which
+don't understand UNC paths.
 
+A couple of traps to avoid:
+
+* On windows 10 you *won't* be able to browse the samba network shares but you
+  can still map the network drive if you know the host name and share name.
+  This is because samba
+  [doesn't yet support the ws-discovery protocol](https://superuser.com/questions/1322497/did-windows-10-april-update-break-network-discovery-and-samba-support),
+  and microsoft have deprecated the old SMB-1.0 protocol. You can re-enable
+  SMB-1.0 via the "Windows Features" dialog, but microsoft may well remove
+  support for it completely in the near future.
 * Be sure to use the samba host name as the windows domain when mapping the
   network drive or windows
   [won't remember your credentials](https://superuser.com/questions/309570/windows-refuses-to-remember-network-share-credentials)
