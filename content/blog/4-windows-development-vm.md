@@ -100,7 +100,9 @@ drivers and guest agents to install. First, install the NetKVM driver to get
 your network working by opening `Device Manager` and selecting `Other
 devices->Ethernet Controller`. Right click this and select `Update
 Driver->Browse my computer for Drivers`, followed by entering the location of
-the NetKVM directory on the virtio-win CDROM.
+the NetKVM directory on the virtio-win CDROM. See the RedHat
+[KVM documentation](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/6/html/virtualization_host_configuration_and_guest_installation_guide/form-virtualization_host_configuration_and_guest_installation_guide-para_virtualized_drivers-mounting_the_image_with_virt_manager)
+for more detail.
 
 For all other drivers and tools, the fastest way to get things working is to
 install the "windows guest tools" from <https://www.spice-space.org/download.html>.
@@ -244,6 +246,62 @@ A couple of traps to avoid:
   `HKEY_LOCAL_MACHINE/SOFTWARE/Microsoft/Windows/CurrentVersion/Policies/System/EnableLinkedConnections`
   DWORD to `1`. See [here](http://www.winability.com/how-to-make-elevated-programs-recognize-network-drives/)
   for additional detail.
+
+### Automounting windows shares in linux
+
+Some windows software doesn't like to have its data stored on a network drive.
+In these cases you might be forced to do the *opposite* of the approach above —
+that is, to export a windows share and mount it from the linux guest. I don't
+recommend this (the host should be storing your important files), but if you
+need it here's how to set it up.
+
+On the windows guest side, new shares can be created using the `net share`
+command. For example to create a new share name `Dev` which points at the
+directory `C:\dev`, with full access for `SomeUser`:
+
+```bat
+net share Dev=C:\dev /grant:SomeUser,FULL
+```
+
+On the host linux machine, you can test your share with something like
+
+```bash
+sudo mount -t cifs -o username=SomeUser,domain=localhost //192.168.122.88/Dev /mnt/tmp
+ls /mnt/tmp
+sudo umount /mnt/tmp
+```
+
+This assumes that you've got a local directory `/mnt/tmp`, and that
+`192.168.122.10` is the IP address of your virtual machine.
+
+You probably want this to be mounted *automatically* when the VM is on and you
+navigate to `/mnt/win_dev`. You can do this using systemd's automounter support
+by putting the following in your `/etc/fstab` file:
+
+```
+# automount CIFS view of the Dev share using systemd
+//192.168.122.88/Dev /mnt/win_dev cifs noauto,vers=1.0,uid=1000,gid=1000,_netdev,x-systemd.automount,x-systemd.device-timeout=10,nofail,credentials=/home/youruser/.win-dev-credentials.txt 0   0 
+```
+
+You need to make the directory `/mnt/win_dev` or equivalent, and the windows
+credentials for the share in `/home/youruser/.win-dev-credentials.txt` should
+look like 
+
+```
+username=SomeUser
+password=somepassword!!
+domain=localhost
+```
+
+Now reload the systemd config and start the automounter:
+
+```bash
+sudo systemctl daemon-reload
+systemctl start mnt-win_dev.mount  # depends on the name of your share
+```
+
+Test with `ls /mnt/win_dev`.
+
 
 ## Networking your virtual machines together
 
