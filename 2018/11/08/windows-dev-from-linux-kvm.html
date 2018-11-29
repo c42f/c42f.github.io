@@ -153,7 +153,9 @@ drivers and guest agents to install. First, install the NetKVM driver to get
 your network working by opening <code>Device Manager</code> and selecting <code>Other
 devices-&gt;Ethernet Controller</code>. Right click this and select <code>Update
 Driver-&gt;Browse my computer for Drivers</code>, followed by entering the location of
-the NetKVM directory on the virtio-win CDROM.</p>
+the NetKVM directory on the virtio-win CDROM. See the RedHat
+<a href="https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/6/html/virtualization_host_configuration_and_guest_installation_guide/form-virtualization_host_configuration_and_guest_installation_guide-para_virtualized_drivers-mounting_the_image_with_virt_manager">KVM documentation</a>
+for more detail.</p>
 <p>For all other drivers and tools, the fastest way to get things working is to
 install the "windows guest tools" from <a href="https://www.spice-space.org/download.html">https://www.spice-space.org/download.html</a>.
 This includes</p>
@@ -281,6 +283,52 @@ don't understand UNC paths.</p>
   DWORD to <code>1</code>. See <a href="http://www.winability.com/how-to-make-elevated-programs-recognize-network-drives/">here</a>
   for additional detail.</li>
 </ul>
+<h3>Automounting windows shares in linux</h3>
+<p>Some windows software doesn't like to have its data stored on a network drive.
+In these cases you might be forced to do the <em>opposite</em> of the approach above —
+that is, to export a windows share and mount it from the linux guest. I don't
+recommend this (the host should be storing your important files), but if you
+need it here's how to set it up.</p>
+<p>On the windows guest side, new shares can be created using the <code>net share</code>
+command. For example to create a new share name <code>Dev</code> which points at the
+directory <code>C:\dev</code>, with full access for <code>SomeUser</code>:</p>
+<div class="highlight"><pre><span></span>net share Dev=C:\dev /grant:SomeUser,FULL
+</pre></div>
+
+
+<p>On the host linux machine, you can test your share with something like</p>
+<div class="highlight"><pre><span></span>sudo mount -t cifs -o <span class="nv">username</span><span class="o">=</span>SomeUser,domain<span class="o">=</span>localhost //192.168.122.88/Dev /mnt/tmp
+ls /mnt/tmp
+sudo umount /mnt/tmp
+</pre></div>
+
+
+<p>This assumes that you've got a local directory <code>/mnt/tmp</code>, and that
+<code>192.168.122.10</code> is the IP address of your virtual machine.</p>
+<p>You probably want this to be mounted <em>automatically</em> when the VM is on and you
+navigate to <code>/mnt/win_dev</code>. You can do this using systemd's automounter support
+by putting the following in your <code>/etc/fstab</code> file:</p>
+<div class="highlight"><pre><span></span># automount CIFS view of the Dev share using systemd
+//192.168.122.88/Dev /mnt/win_dev cifs noauto,vers=1.0,uid=1000,gid=1000,_netdev,x-systemd.automount,x-systemd.device-timeout=10,nofail,credentials=/home/youruser/.win-dev-credentials.txt 0   0 
+</pre></div>
+
+
+<p>You need to make the directory <code>/mnt/win_dev</code> or equivalent, and the windows
+credentials for the share in <code>/home/youruser/.win-dev-credentials.txt</code> should
+look like </p>
+<div class="highlight"><pre><span></span>username=SomeUser
+password=somepassword!!
+domain=localhost
+</pre></div>
+
+
+<p>Now reload the systemd config and start the automounter:</p>
+<div class="highlight"><pre><span></span>sudo systemctl daemon-reload
+systemctl start mnt-win_dev.mount  <span class="c1"># depends on the name of your share</span>
+</pre></div>
+
+
+<p>Test with <code>ls /mnt/win_dev</code>.</p>
 <h2>Networking your virtual machines together</h2>
 <p>Network setup with KVM is very straightforward. By default, libvirt attaches
 all machines to a virtual bridge on the same "default" network, with new
