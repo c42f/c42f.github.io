@@ -37,7 +37,11 @@ NVidia GTX 1050 GPU, currently disabled to avoid the extra power draw.
 
 Firstly, install the `virt-manager` package which provides a GUI which will let
 you configure VM hardware interactively, gives a list of VMs and a graphical
-console for each VM. Let's create a VM with the `virt-manager` GUI:
+console for each VM. Also add yourself to the libvirt group so you can run the
+`libvirt` tools without a password (type `usermod -a -G libvirt $USER` and
+restart your session).
+
+Let's create a VM with the `virt-manager` GUI:
 
 * Click `File->New Virtual Machine`.
 * When starting from scratch you'll probably want "Local install media" to
