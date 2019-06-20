@@ -92,7 +92,10 @@ NVidia GTX 1050 GPU, currently disabled to avoid the extra power draw.</p>
 <h2>Virtual hardware setup using virt-manager</h2>
 <p>Firstly, install the <code>virt-manager</code> package which provides a GUI which will let
 you configure VM hardware interactively, gives a list of VMs and a graphical
-console for each VM. Let's create a VM with the <code>virt-manager</code> GUI:</p>
+console for each VM. Also add yourself to the libvirt group so you can run the
+<code>libvirt</code> tools without a password (type <code>usermod -a -G libvirt $USER</code> and
+restart your session).</p>
+<p>Let's create a VM with the <code>virt-manager</code> GUI:</p>
 <ul>
 <li>Click <code>File-&gt;New Virtual Machine</code>.</li>
 <li>When starting from scratch you'll probably want "Local install media" to
@@ -220,30 +223,30 @@ security you will want to restrict the network interfaces the samba server can
 bind to. By default, virt-manager creates a virtual bridge called <code>virbr0</code> on
 the host and connects the VMs to that, so you'll need something like the
 following in your samba config file <code>/etc/samba/smb.conf</code>:</p>
-<div class="highlight"><pre><span></span># Only allow local VMs to see the samba server
-interfaces = virbr0
-bind interfaces only = yes
+<div class="highlight"><pre><span></span><span class="o">#</span> <span class="k">Only</span> <span class="n">allow</span> <span class="k">local</span> <span class="n">VMs</span> <span class="k">to</span> <span class="n">see</span> <span class="n">the</span> <span class="n">samba</span> <span class="n">server</span>
+<span class="n">interfaces</span> <span class="o">=</span> <span class="n">virbr0</span>
+<span class="n">bind</span> <span class="n">interfaces</span> <span class="k">only</span> <span class="o">=</span> <span class="n">yes</span>
 </pre></div>
 
 
 <p>While you're at it, you may want to comment out the sections dealing with
 printers and add the following to disable them completely:</p>
-<div class="highlight"><pre><span></span># Disable printers
-load printers = no
-printing = bsd
-printcap name = /dev/null
-disable spoolss = yes
+<div class="highlight"><pre><span></span><span class="o">#</span> <span class="n">Disable</span> <span class="n">printers</span>
+<span class="k">load</span> <span class="n">printers</span> <span class="o">=</span> <span class="k">no</span>
+<span class="n">printing</span> <span class="o">=</span> <span class="n">bsd</span>
+<span class="n">printcap</span> <span class="n">name</span> <span class="o">=</span> <span class="o">/</span><span class="n">dev</span><span class="o">/</span><span class="k">null</span>
+<span class="n">disable</span> <span class="n">spoolss</span> <span class="o">=</span> <span class="n">yes</span>
 </pre></div>
 
 
 <p>Shared samba folder setup is pretty standard and there's examples in
 <code>smb.conf</code>. You might share your home directory, or if you don't trust the VMs
 as much as the host set up a special shared directory as follows:</p>
-<div class="highlight"><pre><span></span># Share for all local VMs
-[vmshare]
-    path = /home/$your_user_name/vmshare
-    writable = yes
-    browseable = yes
+<div class="highlight"><pre><span></span># <span class="nv">Share</span> <span class="k">for</span> <span class="nv">all</span> <span class="nv">local</span> <span class="nv">VMs</span>
+[<span class="nv">vmshare</span>]
+    <span class="nv">path</span> <span class="o">=</span> <span class="o">/</span><span class="nv">home</span><span class="o">/</span>$<span class="nv">your_user_name</span><span class="o">/</span><span class="nv">vmshare</span>
+    <span class="nv">writable</span> <span class="o">=</span> <span class="nv">yes</span>
+    <span class="nv">browseable</span> <span class="o">=</span> <span class="nv">yes</span>
 </pre></div>
 
 
@@ -251,8 +254,8 @@ as much as the host set up a special shared directory as follows:</p>
 the samba share. For this you may need to turn off a security feature as
 <a href="https://wiki.samba.org/index.php/Setting_up_a_Share_Using_POSIX_ACLs#Making_Files_Executable">described</a>
 on the samba wiki:</p>
-<div class="highlight"><pre><span></span># Allow users to execute all files on the share
-acl allow execute always = True
+<div class="highlight"><pre><span></span><span class="o">#</span> <span class="n">Allow</span> <span class="n">users</span> <span class="k">to</span> <span class="k">execute</span> <span class="k">all</span> <span class="n">files</span> <span class="k">on</span> <span class="n">the</span> <span class="k">share</span>
+<span class="n">acl</span> <span class="n">allow</span> <span class="k">execute</span> <span class="n">always</span> <span class="o">=</span> <span class="k">True</span>
 </pre></div>
 
 
@@ -308,17 +311,17 @@ sudo umount /mnt/tmp
 <p>You probably want this to be mounted <em>automatically</em> when the VM is on and you
 navigate to <code>/mnt/win_dev</code>. You can do this using systemd's automounter support
 by putting the following in your <code>/etc/fstab</code> file:</p>
-<div class="highlight"><pre><span></span># automount CIFS view of the Dev share using systemd
-//192.168.122.88/Dev /mnt/win_dev cifs noauto,vers=1.0,uid=1000,gid=1000,_netdev,x-systemd.automount,x-systemd.device-timeout=10,nofail,credentials=/home/youruser/.win-dev-credentials.txt 0   0 
+<div class="highlight"><pre><span></span><span class="o">#</span> <span class="n">automount</span> <span class="n">CIFS</span> <span class="k">view</span> <span class="k">of</span> <span class="n">the</span> <span class="n">Dev</span> <span class="k">share</span> <span class="k">using</span> <span class="n">systemd</span>
+<span class="o">//</span><span class="mi">192</span><span class="p">.</span><span class="mi">168</span><span class="p">.</span><span class="mi">122</span><span class="p">.</span><span class="mi">88</span><span class="o">/</span><span class="n">Dev</span> <span class="o">/</span><span class="n">mnt</span><span class="o">/</span><span class="n">win_dev</span> <span class="n">cifs</span> <span class="n">noauto</span><span class="p">,</span><span class="n">vers</span><span class="o">=</span><span class="mi">1</span><span class="p">.</span><span class="mi">0</span><span class="p">,</span><span class="n">uid</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span><span class="n">gid</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span><span class="n">_netdev</span><span class="p">,</span><span class="n">x</span><span class="o">-</span><span class="n">systemd</span><span class="p">.</span><span class="n">automount</span><span class="p">,</span><span class="n">x</span><span class="o">-</span><span class="n">systemd</span><span class="p">.</span><span class="n">device</span><span class="o">-</span><span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span><span class="n">nofail</span><span class="p">,</span><span class="n">credentials</span><span class="o">=/</span><span class="n">home</span><span class="o">/</span><span class="n">youruser</span><span class="o">/</span><span class="p">.</span><span class="n">win</span><span class="o">-</span><span class="n">dev</span><span class="o">-</span><span class="n">credentials</span><span class="p">.</span><span class="n">txt</span> <span class="mi">0</span>   <span class="mi">0</span> 
 </pre></div>
 
 
 <p>You need to make the directory <code>/mnt/win_dev</code> or equivalent, and the windows
 credentials for the share in <code>/home/youruser/.win-dev-credentials.txt</code> should
 look like </p>
-<div class="highlight"><pre><span></span>username=SomeUser
-password=somepassword!!
-domain=localhost
+<div class="highlight"><pre><span></span><span class="n">username</span><span class="o">=</span><span class="n">SomeUser</span>
+<span class="n">password</span><span class="o">=</span><span class="n">somepassword</span><span class="o">!!</span>
+<span class="k">domain</span><span class="o">=</span><span class="n">localhost</span>
 </pre></div>
 
 

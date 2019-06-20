@@ -65,7 +65,7 @@
 
   <div class="article">
     <p>A collegue at work recently asked for the inverse of the
-<a href="http://web.archive.org/web/20060507103516/http://www.cris.com/~Ttwang/tech/inthash.htm">2002 version</a><sup id="fnref:versionnote"><a class="footnote-ref" href="#fn:versionnote" rel="footnote">1</a></sup>
+<a href="http://web.archive.org/web/20060507103516/http://www.cris.com/~Ttwang/tech/inthash.htm">2002 version</a><sup id="fnref:versionnote"><a class="footnote-ref" href="#fn:versionnote">1</a></sup>
 of Thomas Wang's 32 bit mix function.  Here is a C++ implementation:</p>
 <div class="highlight"><pre><span></span><span class="kt">uint32_t</span> <span class="nf">inthash</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="n">key</span><span class="p">)</span>
 <span class="p">{</span>
@@ -145,14 +145,14 @@ parts:</p>
 
 
 <p>then <code>k6 = k5^(k5&gt;&gt;16)</code> is just</p>
-<div class="highlight"><pre><span></span>k6High = k5High
-k6Low = k5Low ^ k6High   // ^ is xor here!
+<div class="highlight"><pre><span></span><span class="n">k6High</span> <span class="o">=</span> <span class="n">k5High</span>
+<span class="n">k6Low</span> <span class="o">=</span> <span class="n">k5Low</span> <span class="o">^</span> <span class="n">k6High</span>   <span class="o">//</span> <span class="o">^</span> <span class="k">is</span> <span class="n">xor</span> <span class="n">here</span><span class="o">!</span>
 </pre></div>
 
 
 <p>thus</p>
-<div class="highlight"><pre><span></span>k5High = k6High
-k5Low = k6Low ^ k6High   // a = b^c  &lt;=&gt;  a^c = b
+<div class="highlight"><pre><span></span><span class="n">k5High</span> <span class="o">=</span> <span class="n">k6High</span>
+<span class="n">k5Low</span> <span class="o">=</span> <span class="n">k6Low</span> <span class="o">^</span> <span class="n">k6High</span>   <span class="o">//</span> <span class="n">a</span> <span class="o">=</span> <span class="n">b</span><span class="o">^</span><span class="k">c</span>  <span class="o">&lt;=&gt;</span>  <span class="n">a</span><span class="o">^</span><span class="k">c</span> <span class="o">=</span> <span class="n">b</span>
 </pre></div>
 
 
@@ -249,7 +249,7 @@ checks that <code>unhash(hash(i)) == i</code> for all $2^{32}$ possible values.<
 <p>There's more than one version of this hash, but I didn't realise
 it to start with.  According to the Internet Archive, the version used here is
 from 2002, but there's also more recent (presumably improved)
-<a href="http://web.archive.org/web/20090408063205/http://www.cris.com/~ttwang/tech/inthash.htm">2006 version</a>.&#160;<a class="footnote-backref" href="#fnref:versionnote" rev="footnote" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+<a href="http://web.archive.org/web/20090408063205/http://www.cris.com/~ttwang/tech/inthash.htm">2006 version</a>.&#160;<a class="footnote-backref" href="#fnref:versionnote" title="Jump back to footnote 1 in the text">&#8617;</a></p>
 </li>
 </ol>
 </div>

@@ -82,7 +82,7 @@ pain.</p>
 
 
 <p>It would be nice to be able to name the stream for logging when something goes
-wrong.  At a first sight<sup id="fnref:secondsight"><a class="footnote-ref" href="#fn:secondsight" rel="footnote">1</a></sup> the only way to do this seems to be to
+wrong.  At a first sight<sup id="fnref:secondsight"><a class="footnote-ref" href="#fn:secondsight">1</a></sup> the only way to do this seems to be to
 put the stream in a wrapper object.  This works, but it feels a bit intrusive
 and unnatural to me.  It also doesn't play well with third party libraries which
 pass around standard library iostreams.</p>
@@ -107,7 +107,7 @@ struct:</p>
 <p>Inside each standard C++ stream there's a container for storing custom
 formatting flags.  The <code>xalloc()</code> function allocates a new globally unique index
 in this container.  You're meant to use it to control the formatting of custom
-types<sup id="fnref:xallocpurpose"><a class="footnote-ref" href="#fn:xallocpurpose" rel="footnote">2</a></sup> but we're going to stash a <code>StreamInfo</code> in there.</p>
+types<sup id="fnref:xallocpurpose"><a class="footnote-ref" href="#fn:xallocpurpose">2</a></sup> but we're going to stash a <code>StreamInfo</code> in there.</p>
 <div class="highlight"><pre><span></span><span class="k">const</span> <span class="kt">int</span> <span class="n">g_streamInfoIndex</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">ios</span><span class="o">::</span><span class="n">xalloc</span><span class="p">();</span>
 </pre></div>
 
@@ -146,71 +146,71 @@ carefully using the <code>register_callback</code> function.</p>
 </pre></div>
 
 
-<div class="highlight"><pre><span></span><span class="nt">void</span> <span class="nt">setStreamInfo</span><span class="o">(</span><span class="nt">std</span><span class="p">::</span><span class="nd">ios_base</span><span class="o">&amp;</span> <span class="nt">stream</span><span class="o">,</span>
-                   <span class="nt">const</span> <span class="nt">StreamInfo</span><span class="o">&amp;</span> <span class="nt">info</span><span class="o">)</span>
-<span class="p">{</span>
-    <span class="err">getStreamInfo(stream)</span> <span class="err">=</span> <span class="err">info</span><span class="p">;</span>
-<span class="p">}</span>
+<div class="highlight"><pre><span></span><span class="nv">void</span> <span class="nv">setStreamInfo</span><span class="ss">(</span><span class="nv">std</span>::<span class="nv">ios_base</span><span class="o">&amp;</span> <span class="nv">stream</span>,
+                   <span class="nv">const</span> <span class="nv">StreamInfo</span><span class="o">&amp;</span> <span class="nv">info</span><span class="ss">)</span>
+{
+    <span class="nv">getStreamInfo</span><span class="ss">(</span><span class="nv">stream</span><span class="ss">)</span> <span class="o">=</span> <span class="nv">info</span><span class="c1">;</span>
+}
 
-<span class="nt">void</span> <span class="nt">setStreamInfo</span><span class="o">(</span><span class="nt">std</span><span class="p">::</span><span class="nd">ios_base</span><span class="o">&amp;</span> <span class="nt">stream</span><span class="o">,</span>
-                   <span class="nt">const</span> <span class="nt">std</span><span class="p">::</span><span class="nd">string</span><span class="o">&amp;</span> <span class="nt">name</span> <span class="o">=</span> <span class="s2">&quot;unknown_stream&quot;</span><span class="o">,</span>
-                   <span class="nt">int64_t</span> <span class="nt">size</span> <span class="o">=</span> <span class="nt">-1</span><span class="o">)</span>
-<span class="p">{</span>
-    <span class="err">setStreamInfo(stream,</span> <span class="err">StreamInfo(name,</span> <span class="err">size))</span><span class="p">;</span>
-<span class="p">}</span>
+<span class="nv">void</span> <span class="nv">setStreamInfo</span><span class="ss">(</span><span class="nv">std</span>::<span class="nv">ios_base</span><span class="o">&amp;</span> <span class="nv">stream</span>,
+                   <span class="nv">const</span> <span class="nv">std</span>::<span class="nv">string</span><span class="o">&amp;</span> <span class="nv">name</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="s">unknown_stream</span><span class="s2">&quot;</span>,
+                   <span class="nv">int64_t</span> <span class="nv">size</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="ss">)</span>
+{
+    <span class="nv">setStreamInfo</span><span class="ss">(</span><span class="nv">stream</span>, <span class="nv">StreamInfo</span><span class="ss">(</span><span class="nv">name</span>, <span class="nv">size</span><span class="ss">))</span><span class="c1">;</span>
+}
 
 
-<span class="o">///</span> <span class="nt">Set</span> <span class="nt">istringstream</span> <span class="nt">information</span><span class="o">,</span> <span class="nt">with</span> <span class="nt">sensible</span> <span class="nt">defaults</span>
+<span class="o">///</span> <span class="nv">Set</span> <span class="nv">istringstream</span> <span class="nv">information</span>, <span class="nv">with</span> <span class="nv">sensible</span> <span class="nv">defaults</span>
 <span class="o">///</span>
-<span class="o">///</span> <span class="nt">The</span> <span class="nt">size</span> <span class="nt">of</span> <span class="nt">the</span> <span class="nt">stream</span> <span class="nt">internal</span> <span class="nt">string</span> <span class="nt">buffer</span> <span class="nt">is</span> <span class="nt">assumed</span> <span class="nt">to</span> <span class="nt">be</span> <span class="nt">already</span> <span class="nt">filled</span> <span class="nt">by</span> <span class="nt">the</span> <span class="nt">time</span> <span class="nt">that</span> <span class="nt">setStreamInfo</span>
+<span class="o">///</span> <span class="nv">The</span> <span class="nv">size</span> <span class="nv">of</span> <span class="nv">the</span> <span class="nv">stream</span> <span class="nv">internal</span> <span class="nv">string</span> <span class="nv">buffer</span> <span class="nv">is</span> <span class="nv">assumed</span> <span class="nv">to</span> <span class="nv">be</span> <span class="nv">already</span> <span class="nv">filled</span> <span class="nv">by</span> <span class="nv">the</span> <span class="nv">time</span> <span class="nv">that</span> <span class="nv">setStreamInfo</span>
 <span class="o">///</span>
-<span class="o">///</span> <span class="nt">calls</span> <span class="nt">to</span> <span class="nt">stream</span><span class="p">.</span><span class="nc">str</span><span class="o">(</span><span class="nt">newstring</span><span class="o">)</span>
-<span class="nt">void</span> <span class="nt">setStreamInfo</span><span class="o">(</span><span class="nt">std</span><span class="p">::</span><span class="nd">istringstream</span><span class="o">&amp;</span> <span class="nt">stream</span><span class="o">,</span>
-                   <span class="nt">const</span> <span class="nt">std</span><span class="p">::</span><span class="nd">string</span><span class="o">&amp;</span> <span class="nt">name</span> <span class="o">=</span> <span class="s2">&quot;unknown_istringstream&quot;</span><span class="o">)</span>
-<span class="p">{</span>
-    <span class="err">setStreamInfo(stream,</span> <span class="err">StreamInfo(name,</span> <span class="err">true,</span> <span class="err">stream.rdbuf()-&gt;in_avail()))</span><span class="p">;</span>
-<span class="p">}</span>
+<span class="o">///</span> <span class="nv">calls</span> <span class="nv">to</span> <span class="nv">stream</span>.<span class="nv">str</span><span class="ss">(</span><span class="nv">newstring</span><span class="ss">)</span>
+<span class="nv">void</span> <span class="nv">setStreamInfo</span><span class="ss">(</span><span class="nv">std</span>::<span class="nv">istringstream</span><span class="o">&amp;</span> <span class="nv">stream</span>,
+                   <span class="nv">const</span> <span class="nv">std</span>::<span class="nv">string</span><span class="o">&amp;</span> <span class="nv">name</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="s">unknown_istringstream</span><span class="s2">&quot;</span><span class="ss">)</span>
+{
+    <span class="nv">setStreamInfo</span><span class="ss">(</span><span class="nv">stream</span>, <span class="nv">StreamInfo</span><span class="ss">(</span><span class="nv">name</span>, <span class="nv">true</span>, <span class="nv">stream</span>.<span class="nv">rdbuf</span><span class="ss">()</span><span class="o">-&gt;</span><span class="nv">in_avail</span><span class="ss">()))</span><span class="c1">;</span>
+}
 
-<span class="o">///</span> <span class="nt">Set</span> <span class="nt">fstream</span> <span class="nt">information</span>
-<span class="nt">void</span> <span class="nt">setStreamInfo</span><span class="o">(</span><span class="nt">std</span><span class="p">::</span><span class="nd">ifstream</span><span class="o">&amp;</span> <span class="nt">stream</span><span class="o">,</span>
-                   <span class="nt">const</span> <span class="nt">std</span><span class="p">::</span><span class="nd">string</span><span class="o">&amp;</span> <span class="nt">name</span> <span class="o">=</span> <span class="s2">&quot;unknown_ifstream&quot;</span><span class="o">)</span>
-<span class="p">{</span>
-    <span class="n">boost</span><span class="p">:</span><span class="o">:</span><span class="n">system</span><span class="o">::</span><span class="n">error_code</span> <span class="n">err</span><span class="p">;</span>
-    <span class="err">uint64_t</span> <span class="err">fileSize</span> <span class="err">=</span> <span class="n">boost</span><span class="p">:</span><span class="o">:</span><span class="n">filesystem</span><span class="o">::</span><span class="nf">file_size</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">err</span><span class="p">);</span>
-    <span class="err">if</span> <span class="err">(err)</span> <span class="err">fileSize</span> <span class="err">=</span> <span class="err">-1</span><span class="p">;</span>
-    <span class="err">setStreamInfo(stream,</span> <span class="err">StreamInfo(name,</span> <span class="err">true,</span> <span class="err">fileSize))</span><span class="p">;</span>
-<span class="p">}</span>
-
-
-<span class="nt">std</span><span class="p">::</span><span class="nd">ostream</span><span class="o">&amp;</span> <span class="nt">operator</span><span class="o">&lt;&lt;(</span><span class="nt">std</span><span class="p">::</span><span class="nd">ostream</span><span class="o">&amp;</span> <span class="nt">out</span><span class="o">,</span> <span class="nt">const</span> <span class="nt">StreamInfo</span><span class="o">&amp;</span> <span class="nt">info</span><span class="o">)</span>
-<span class="p">{</span>
-    <span class="err">out.setf(</span><span class="n">std</span><span class="p">:</span><span class="o">:</span><span class="n">ios</span><span class="o">::</span><span class="n">boolalpha</span><span class="p">);</span>
-    <span class="err">out</span> <span class="err">&lt;&lt;</span> <span class="err">&quot;(name=\&quot;&quot;</span> <span class="err">&lt;&lt;</span> <span class="err">info.name</span> <span class="err">&lt;&lt;</span> <span class="err">&quot;\&quot;,</span> <span class="err">&quot;</span>
-        <span class="err">&lt;&lt;</span> <span class="err">&quot;size=&quot;</span> <span class="err">&lt;&lt;</span> <span class="err">info.size</span> <span class="err">&lt;&lt;</span> <span class="err">&quot;)&quot;</span><span class="p">;</span>
-    <span class="err">return</span> <span class="err">out</span><span class="p">;</span>
-<span class="p">}</span>
+<span class="o">///</span> <span class="nv">Set</span> <span class="nv">fstream</span> <span class="nv">information</span>
+<span class="nv">void</span> <span class="nv">setStreamInfo</span><span class="ss">(</span><span class="nv">std</span>::<span class="nv">ifstream</span><span class="o">&amp;</span> <span class="nv">stream</span>,
+                   <span class="nv">const</span> <span class="nv">std</span>::<span class="nv">string</span><span class="o">&amp;</span> <span class="nv">name</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="s">unknown_ifstream</span><span class="s2">&quot;</span><span class="ss">)</span>
+{
+    <span class="nv">boost</span>::<span class="nv">system</span>::<span class="nv">error_code</span> <span class="nv">err</span><span class="c1">;</span>
+    <span class="nv">uint64_t</span> <span class="nv">fileSize</span> <span class="o">=</span> <span class="nv">boost</span>::<span class="nv">filesystem</span>::<span class="nv">file_size</span><span class="ss">(</span><span class="nv">name</span>, <span class="nv">err</span><span class="ss">)</span><span class="c1">;</span>
+    <span class="k">if</span> <span class="ss">(</span><span class="nv">err</span><span class="ss">)</span> <span class="nv">fileSize</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="c1">;</span>
+    <span class="nv">setStreamInfo</span><span class="ss">(</span><span class="nv">stream</span>, <span class="nv">StreamInfo</span><span class="ss">(</span><span class="nv">name</span>, <span class="nv">true</span>, <span class="nv">fileSize</span><span class="ss">))</span><span class="c1">;</span>
+}
 
 
-<span class="nt">int</span> <span class="nt">main</span><span class="o">()</span>
-<span class="p">{</span>
-    <span class="n">std</span><span class="p">:</span><span class="o">:</span><span class="n">istringstream</span> <span class="nf">iss</span><span class="p">(</span><span class="s2">&quot;asdf&quot;</span><span class="p">);</span>
-    <span class="err">setStreamInfo(iss,</span> <span class="err">&quot;A</span> <span class="err">string</span> <span class="err">stream&quot;)</span><span class="p">;</span>
+<span class="nv">std</span>::<span class="nv">ostream</span><span class="o">&amp;</span> <span class="nv">operator</span><span class="o">&lt;&lt;</span><span class="ss">(</span><span class="nv">std</span>::<span class="nv">ostream</span><span class="o">&amp;</span> <span class="nv">out</span>, <span class="nv">const</span> <span class="nv">StreamInfo</span><span class="o">&amp;</span> <span class="nv">info</span><span class="ss">)</span>
+{
+    <span class="nv">out</span>.<span class="nv">setf</span><span class="ss">(</span><span class="nv">std</span>::<span class="nv">ios</span>::<span class="nv">boolalpha</span><span class="ss">)</span><span class="c1">;</span>
+    <span class="nv">out</span> <span class="o">&lt;&lt;</span> <span class="s2">&quot;</span><span class="s">(name=\</span><span class="s2">&quot;&quot;</span><span class="s"> &lt;&lt; info.name &lt;&lt; </span><span class="s2">&quot;</span>\<span class="s2">&quot;</span><span class="s">, </span><span class="s2">&quot;</span>
+        <span class="o">&lt;&lt;</span> <span class="s2">&quot;</span><span class="s">size=</span><span class="s2">&quot;</span> <span class="o">&lt;&lt;</span> <span class="nv">info</span>.<span class="nv">size</span> <span class="o">&lt;&lt;</span> <span class="s2">&quot;</span><span class="s">)</span><span class="s2">&quot;</span><span class="c1">;</span>
+    <span class="k">return</span> <span class="nv">out</span><span class="c1">;</span>
+}
 
-    <span class="err">{</span>
-        <span class="err">//</span> <span class="err">Copyfmt</span> <span class="err">must</span> <span class="err">be</span> 
-        <span class="n">std</span><span class="p">:</span><span class="o">:</span><span class="n">istringstream</span> <span class="n">dummy</span><span class="p">;</span>
-        <span class="err">copyfmt(iss,</span> <span class="err">dummy)</span><span class="p">;</span>
-    <span class="p">}</span>
 
-    <span class="nt">std</span><span class="p">::</span><span class="nd">cout</span> <span class="o">&lt;&lt;</span> <span class="nt">getStreamInfo</span><span class="o">(</span><span class="nt">iss</span><span class="o">)</span> <span class="o">&lt;&lt;</span> <span class="s2">&quot;\n&quot;</span><span class="o">;</span>
+<span class="nv">int</span> <span class="nv">main</span><span class="ss">()</span>
+{
+    <span class="nv">std</span>::<span class="nv">istringstream</span> <span class="nv">iss</span><span class="ss">(</span><span class="s2">&quot;</span><span class="s">asdf</span><span class="s2">&quot;</span><span class="ss">)</span><span class="c1">;</span>
+    <span class="nv">setStreamInfo</span><span class="ss">(</span><span class="nv">iss</span>, <span class="s2">&quot;</span><span class="s">A string stream</span><span class="s2">&quot;</span><span class="ss">)</span><span class="c1">;</span>
 
-    <span class="nt">const</span> <span class="nt">char</span><span class="o">*</span> <span class="nt">fileName</span> <span class="o">=</span> <span class="s2">&quot;/home/chris/dev/test/stream_info.cpp&quot;</span><span class="o">;</span>
-    <span class="nt">std</span><span class="p">::</span><span class="nd">ifstream</span> <span class="nt">file</span><span class="o">(</span><span class="nt">fileName</span><span class="o">);</span>
-    <span class="nt">setStreamInfo</span><span class="o">(</span><span class="nt">file</span><span class="o">,</span> <span class="nt">fileName</span><span class="o">);</span>
-    <span class="nt">std</span><span class="p">::</span><span class="nd">cout</span> <span class="o">&lt;&lt;</span> <span class="nt">getStreamInfo</span><span class="o">(</span><span class="nt">file</span><span class="o">)</span> <span class="o">&lt;&lt;</span> <span class="s2">&quot;\n&quot;</span><span class="o">;</span>
+    {
+        <span class="o">//</span> <span class="nv">Copyfmt</span> <span class="nv">must</span> <span class="nv">be</span> 
+        <span class="nv">std</span>::<span class="nv">istringstream</span> <span class="nv">dummy</span><span class="c1">;</span>
+        <span class="nv">copyfmt</span><span class="ss">(</span><span class="nv">iss</span>, <span class="nv">dummy</span><span class="ss">)</span><span class="c1">;</span>
+    }
 
-    <span class="nt">return</span> <span class="nt">0</span><span class="o">;</span>
-<span class="err">}</span>
+    <span class="nv">std</span>::<span class="nv">cout</span> <span class="o">&lt;&lt;</span> <span class="nv">getStreamInfo</span><span class="ss">(</span><span class="nv">iss</span><span class="ss">)</span> <span class="o">&lt;&lt;</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="c1">;</span>
+
+    <span class="nv">const</span> <span class="nv">char</span><span class="o">*</span> <span class="nv">fileName</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="s">/home/chris/dev/test/stream_info.cpp</span><span class="s2">&quot;</span><span class="c1">;</span>
+    <span class="nv">std</span>::<span class="nv">ifstream</span> <span class="nv">file</span><span class="ss">(</span><span class="nv">fileName</span><span class="ss">)</span><span class="c1">;</span>
+    <span class="nv">setStreamInfo</span><span class="ss">(</span><span class="nv">file</span>, <span class="nv">fileName</span><span class="ss">)</span><span class="c1">;</span>
+    <span class="nv">std</span>::<span class="nv">cout</span> <span class="o">&lt;&lt;</span> <span class="nv">getStreamInfo</span><span class="ss">(</span><span class="nv">file</span><span class="ss">)</span> <span class="o">&lt;&lt;</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="c1">;</span>
+
+    <span class="k">return</span> <span class="mi">0</span><span class="c1">;</span>
+}
 </pre></div>
 
 
@@ -232,12 +232,12 @@ for multithreaded processing instead of using locking</p>
 <ol>
 <li id="fn:secondsight">
 <p>And to be honest, at least second, third, fourth, and fifth
-sight...&#160;<a class="footnote-backref" href="#fnref:secondsight" rev="footnote" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+sight...&#160;<a class="footnote-backref" href="#fnref:secondsight" title="Jump back to footnote 1 in the text">&#8617;</a></p>
 </li>
 <li id="fn:xallocpurpose">
 <p>Imagine implementing the <code>std::boolalpha</code> manipulator if it
 didn't already exist in the standard library - you'd need some way to attach the
-flag to the stream, and a way to retrieve it inside <code>operator&lt;&lt;(std::ostream&amp;, bool)</code>.&#160;<a class="footnote-backref" href="#fnref:xallocpurpose" rev="footnote" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+flag to the stream, and a way to retrieve it inside <code>operator&lt;&lt;(std::ostream&amp;, bool)</code>.&#160;<a class="footnote-backref" href="#fnref:xallocpurpose" title="Jump back to footnote 2 in the text">&#8617;</a></p>
 </li>
 </ol>
 </div>
