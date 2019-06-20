@@ -261,12 +261,16 @@ on the samba wiki:</p>
 
 <p>Naturally you'll also need to restart smbd after these changes — on Ubuntu with
 systemd use <code>sudo systemctl restart smbd</code>. You'll also need to add a samba
-password to your user with <code>sudo smbpasswd -a $your_user_name</code></p>
+password to your user with <code>sudo smbpasswd -a $your_user_name</code>.</p>
 <h3>Mapping network drives on the guest</h3>
 <p>Once all this is set up, map the network drive in
 <a href="https://support.microsoft.com/en-au/help/4026635/windows-map-a-network-drive">the usual way</a>
 on the guest side to avoid problems with ancient programs like <code>cmd</code> which
-don't understand UNC paths.</p>
+don't understand UNC paths. When connecting you'll need to tick the box
+"Connect using different credentials" and use the credentials you gave to
+<code>smbpasswd</code>. The folder name can be spelled as <code>\\linux-host-name\sharename</code>;
+with <code>linux-host-name</code> the local name of your linux machine or IP address of
+the virtual bridge (eg, <code>192.168.122.1</code>).</p>
 <p>A couple of traps to avoid:</p>
 <ul>
 <li>On windows 10 you <em>won't</em> be able to browse the samba network shares but you
@@ -280,6 +284,10 @@ don't understand UNC paths.</p>
   network drive or windows
   <a href="https://superuser.com/questions/309570/windows-refuses-to-remember-network-share-credentials">won't remember your credentials</a>
   across a reboot.</li>
+<li>You may want to comment out the line containing <code>127.0.1.1</code> in your
+  <code>/etc/hosts</code> file due to the following bug:
+  <a href="https://bugs.launchpad.net/ubuntu/+source/libvirt/+bug/1326536">https://bugs.launchpad.net/ubuntu/+source/libvirt/+bug/1326536</a>; this bug
+  will prevent guest VMs from properly accessing the linux host by name.</li>
 <li>The administrator account may not be able to see the mapped drive unless you
   set a new registry key
   <code>HKEY_LOCAL_MACHINE/SOFTWARE/Microsoft/Windows/CurrentVersion/Policies/System/EnableLinkedConnections</code>
