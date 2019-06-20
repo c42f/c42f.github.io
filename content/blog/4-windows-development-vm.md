@@ -222,15 +222,18 @@ acl allow execute always = True
 
 Naturally you'll also need to restart smbd after these changes — on Ubuntu with
 systemd use `sudo systemctl restart smbd`. You'll also need to add a samba
-password to your user with `sudo smbpasswd -a $your_user_name`
-
+password to your user with `sudo smbpasswd -a $your_user_name`.
 
 ### Mapping network drives on the guest
 
 Once all this is set up, map the network drive in
 [the usual way](https://support.microsoft.com/en-au/help/4026635/windows-map-a-network-drive)
 on the guest side to avoid problems with ancient programs like `cmd` which
-don't understand UNC paths.
+don't understand UNC paths. When connecting you'll need to tick the box
+"Connect using different credentials" and use the credentials you gave to
+`smbpasswd`. The folder name can be spelled as `\\linux-host-name\sharename`;
+with `linux-host-name` the local name of your linux machine or IP address of
+the virtual bridge (eg, `192.168.122.1`).
 
 A couple of traps to avoid:
 
@@ -245,6 +248,10 @@ A couple of traps to avoid:
   network drive or windows
   [won't remember your credentials](https://superuser.com/questions/309570/windows-refuses-to-remember-network-share-credentials)
   across a reboot.
+* You may want to comment out the line containing `127.0.1.1` in your
+  `/etc/hosts` file due to the following bug:
+  <https://bugs.launchpad.net/ubuntu/+source/libvirt/+bug/1326536>; this bug
+  will prevent guest VMs from properly accessing the linux host by name.
 * The administrator account may not be able to see the mapped drive unless you
   set a new registry key
   `HKEY_LOCAL_MACHINE/SOFTWARE/Microsoft/Windows/CurrentVersion/Policies/System/EnableLinkedConnections`
